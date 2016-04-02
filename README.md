@@ -1,33 +1,6 @@
 GLOC (GNU/Linux OverDrive/eMusic Client)
 ========================================
 
-Version 0.5.4b
-
-* Added checks for correct domain names in URL (contentreserve.com, emusic.com)
-* Added hack to fix some thumbnail URLs in eMusic files
-* Changed default thumbnail name from 'thumb.jpg' to 'folder.jpg' for better
-  compatibility
-
-Version 0.5.3b
-
-* Added additional input checks on parsed variables used in output filename
-  (for security purposes)
-* Minor internal tweaks to allow Windows compatability
-* Minor internal tweaks to icon handling
-
-Version 0.5.2b
-
-* Fixed bug regarding case sensitivity in file extension recognition
-
-Version 0.5.1b
-
-* Modified thumbnail code to try alternative URL for eMusic cover art if
-  primary URL fails (failure is also now non-fatal)
-
-Version 0.5b
-
-* Initial public release
-
 
 OVERVIEW
 --------
@@ -37,7 +10,7 @@ OverDrive and eMusic MP3 audiobook collections written in Perl+GTK. Lack of a
 native Linux client for downloading OverDrive audiobooks from libraries and
 retailers has left Linux users in the cold, and this program was written to
 fill that need.  eMusic compatibility was added later. It is developed and
-tested on Debian Linux but is expected to run on most flavors of Linux as well
+tested on Debian GNU/Linux but is expected to run on most flavors of Linux as well
 as any other platforms with the Perl bindings to the GTK+ libraries.
 
 
@@ -61,7 +34,7 @@ library portal usually have checkout periods, and the user's license does not
 permit them to keep the files after the expiration date on the license. GLOC
 has no facilities to enforce this, but the user is expected to abide by all
 terms of agreement with OverDrive and/or eMusic and remove files when the
-license period has passed.
+license period has ended.
 
 
 CAVEATS
@@ -93,17 +66,30 @@ it).  Beyond that, most of the modules used are part of the perl core as of
 version 5.9 or later, with the exception of the following which may need to be
 installed separately:
 
-    File::HomeDir
-    Gtk2
-    HTML::Entities
-    LWP::UserAgent
-    LWP::ConnCache
-    XML::Simple
+    * File::HomeDir
+
+    * Gtk2
+
+    * HTML::Entities
+
+    * HTTP::Tiny
+
+    * XML::Simple
 
 These are available from the package manager of most distributions. For
 example, on Debian they can be installed with
 
-    apt-get install libfile-homedir-perl libgtk2-perl libhtml-parser-perl libwww-perl libxml-simple-perl
+    apt-get install libfile-homedir-perl libgtk2-perl libhtml-parser-perl
+    libhttp-tiny-perl libxml-simple-perl
+
+There is also now a Makefile.PL included with the distribution for those who
+prefer. All it does is to the dependencies and copy the executable to an
+appropriate directory (wherever your copy if Perl is configured to install
+binaries from MakeMaker scripts). Install by:
+
+    perl Makefile.PL
+    make
+    make install
 
 Test your installation simply by running the program on the command line (if
 you don't know how to do this, either read elsewhere or have someone else
@@ -182,6 +168,6 @@ extensively for his own needs and it behaves stably on his system, but no
 outside testing on other system configurations has been done. Users are
 encouraged to try it out and report any suspected bugs, unexpected behavior,
 or other problems or comments on the bug tracker and discussion forums of the
-project sourceforge page:
+project homepage:
 
-https://sourceforge.net/projects/gloc/
+https://github.com/jvolkening/gloc

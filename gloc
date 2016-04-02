@@ -375,6 +375,8 @@ package main;
 use strict;
 use warnings;
 
+our $VERSION = '0.600';
+
 # core modules
 use Config;
 use Digest::SHA qw/sha1_base64 sha1_hex/;
@@ -388,21 +390,19 @@ use threads;
 use threads::shared;
 use Thread::Queue;
 use Time::Piece;
+use URI;
 
 # non-core modules
 use File::HomeDir;
-use Gtk2 qw/-init/;
-use Glib qw(TRUE FALSE);
 use HTML::Entities;
-use LWP::UserAgent;
-use LWP::ConnCache;
+use HTTP::Tiny;
 use XML::Simple;
 
 # Register global "constants" (was using 'Readonly' but removed to minimize
 # non-core dependencies)
 
 my $PROG_NAME     = 'GNU/Linux OverDrive/eMusic Client';
-my $PROG_VERSION  = '0.005004';
+my $PROG_VERSION  = '0.600';
 my $ODM_UA_STRING = 'OverDrive Media Console';
 my $EMX_UA_STRING = "GLOC/$PROG_VERSION";
 my $OMC_VERSION   = '3.1.0.1';
@@ -421,10 +421,12 @@ my $current_book;
 my $current_timeout;
 my $current_type :shared;
 my $cwd :shared;
+my $n_threads = 1; # using multiple threads is still buggy
 
 GetOptions(
-    'retry=i' => \$retries,
+    'retry=i'   => \$retries,
     'debug'     => \$debug,
+    'threads=i' => \$n_threads,
 );
 
 ## Build queue system (MUST be done before using Gtk2!!)
@@ -432,7 +434,13 @@ my @status_queue :shared;
 $Config{useithreads} 
     or die "This program requires threaded perl";
 my $download_queue = Thread::Queue->new;
-my $download_thr = threads->create( \&download_file );
+my @workers;
+for (1..$n_threads) {
+    push @workers, threads->create( \&download_file );
+}
+
+use Gtk2 qw/-init -threads-init/;
+use Glib qw(TRUE FALSE);
 
 ## Build main GUI
 my $mw = Gtk2::Window->new( 'toplevel' );
@@ -649,7 +657,6 @@ if ($ARGV[0]) {
 Gtk2->main;
 
 
-
 #############################################################################
 # Subroutines                                                           
 #############################################################################
@@ -669,25 +676,25 @@ sub download_file {
         }
 
         # initialize user agent
-        my $ua = LWP::UserAgent->new;
-        $ua->conn_cache(LWP::ConnCache->new());
-        $ua->timeout(15);
-
-        # set UserAgent (critical for OverDrive files)
+        my $type;
         {
             lock $current_type;
-            warn "curr_type: $current_type\n" if ($debug);
-            my $ua_string = $current_type eq 'odm' ? $ODM_UA_STRING
-                          : $EMX_UA_STRING;
-            $ua->agent($ua_string);
+            $type = $current_type;
         }
+        my $ua_string = $current_type eq 'odm' ? $ODM_UA_STRING
+                        : $EMX_UA_STRING;
+        my $ua = HTTP::Tiny->new(
+            keep_alive => 1,
+            agent => $ua_string,
+            timeout => 60,
+        );
 
         # fetch file size if necessary (currently only eMusic files)
         if ($filesize eq '??') {
-            my $request  = new HTTP::Request('HEAD', $url);
             for (1..$retries) {
-                my $response = $ua->request($request);
-                $filesize = $response->header('Content-Length');
+                my $response = $ua->head($url);
+                next if (! $response->{success});
+                $filesize = $response->{headers}->{'Content-Length'};
                 next if (! defined $filesize);
                 {
                     lock @status_queue;
@@ -732,12 +739,12 @@ sub download_file {
             open my $tmpfh, ">", $tmpfile;
             binmode $tmpfh;
 
-            my $req = HTTP::Request->new( GET => $url );
+            my %headers;
             {
                 lock $current_type;
                 if ($current_type eq 'odm') {
-                    $req->header('ClientID' => $CLIENT_ID);
-                    $req->header('License' => $license);
+                    $headers{'ClientID'} = $CLIENT_ID;
+                    $headers{'License'}  = $license;
                 }
             }
 
@@ -747,38 +754,41 @@ sub download_file {
             TRY:
             for (1..$retries) { # try each request up to $retries times
 
-                my $req = $req;
-                $req->header('Range' => 'bytes=' . $size . '-');
-
                 warn "Try $_...\n" if ($debug);
 
+                my %headers = %headers;
+                $headers{'Range'} = 'bytes=' . $size . '-';
+
                 # Make the request and handle the incoming data
-                my $res = $ua->request( $req, sub {
+                my $res = $ua->get( $url, {
+                    headers => {%headers},
+                    data_callback => sub {
 
-                    # Run with every data chunk received
-                    if ($term_flag) { #if TERM rcvd
-                        $term_flag = 0;
-                        die("Aborted by user");
-                    }
-                    print {$tmpfh} $_[0] or die "Can't write to $filename: $!\n";
-                    $size += length $_[0];
-                    die("Returned more data than expected") if ($size > $filesize);
-                    my $fraction = $size/$filesize*100;
-                    if ($fraction - $last_frac > 5) {
-                        {
-                            lock @status_queue;
-                            push @status_queue, "$id:PU:$fraction";
+                        # Run with every data chunk received
+                        if ($term_flag) { #if TERM rcvd
+                            $term_flag = 0;
+                            last FILE;
+                            #die("Aborted by user");
                         }
-                        $last_frac = $fraction;
-                    }
-                });
-
+                        print {$tmpfh} $_[0] or die "Can't write to $filename: $!\n";
+                        $size += length $_[0];
+                        die("Returned more data than expected") if ($size > $filesize);
+                        my $fraction = $size/$filesize*100;
+                        if ($fraction - $last_frac > 5) {
+                            {
+                                lock @status_queue;
+                                push @status_queue, "$id:PU:$fraction";
+                            }
+                            $last_frac = $fraction;
+                        }
+                    },
+                } );
 
                 # check the outcome
-                next TRY if ($_ < $retries && $res->header('X-Died')
-                    && $res->header('X-Died') =~ /^read timeout/);
+                next TRY if ($_ < $retries && $res->{status} == 599
+                    && $res->{content} =~ /^read timeout/);
                 close $tmpfh;
-                if ($res->is_success && -s $tmpfile == $filesize) {
+                if ($res->{success} && -s $tmpfile == $filesize) {
                     {
                         lock @status_queue;
                         push @status_queue, "$id:SC:Completed";
@@ -831,7 +841,9 @@ sub toggle_download {
         if ($download_queue->pending > 0) {
             $download_queue->dequeue( $download_queue->pending );
         }
-        $download_thr->kill( 'TERM' );
+        for (@workers) {
+            $_->kill( 'TERM' );
+        }
 
         #end_download();
         return;
@@ -1231,20 +1243,20 @@ sub load_file {
         for (@urls) {
             my $u = $_;
             warn "fetching thumbnail from server: $u\n" if ($debug);
-            my $req = HTTP::Request->new(GET => $u);
-            my $ua = LWP::UserAgent->new;
-            $ua->conn_cache(LWP::ConnCache->new());
-            $ua->timeout(15);
-            my $res = $ua->request($req);
-            if ($res->is_success) {
+            my $ua = HTTP::Tiny->new(
+                keep_alive => 1,
+                timeout => 60,
+            );
+            my $res = $ua->get( $u );
+            if ($res->{success}) {
                 open my $image_file, ">", $thumbnail_file;
                 binmode $image_file;
-                print {$image_file} $res->content;
+                print {$image_file} $res->{content};
                 close $image_file;
                 last URL;
             }
             else {
-                warn $res->status_line, "\n" if ($debug);
+                warn $res->{reason}, "\n" if ($debug);
                 next URL;
             }
         }
@@ -1406,18 +1418,23 @@ sub visual_warn {
 }
 
 sub clean_quit {
+    Gtk2->main_quit;
 
     if (defined $current_timeout) {
-        warn "foobar!!!\n";
         if ($download_queue->pending > 0) {
             $download_queue->dequeue( $download_queue->pending );
         }
-        $download_thr->kill('TERM');
+        for (@workers) {
+            $_->kill('TERM');
+        }
     }
-    $download_queue->enqueue(undef);
-    $download_thr->join();
+    $download_queue->enqueue(undef) for (@workers);
+    for (@workers) {
+        $_->join();
+    }
 
-    Gtk2->main_quit;
+    return 0;
+
 }
 
 sub show_about {
@@ -1425,7 +1442,7 @@ sub show_about {
     my $dialog = Gtk2::AboutDialog->new;
     $dialog->set_program_name($PROG_NAME);
     $dialog->set_version($PROG_VERSION);
-    $dialog->set_copyright(chr(169) . ' 2014 Jeremy Volkening');
+    $dialog->set_copyright(chr(169) . ' 2014-2016 Jeremy Volkening');
     $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console and eMusic download clients');
     $dialog->set_authors('Jeremy Volkening');
     $dialog->set_wrap_license(TRUE);
@@ -1647,22 +1664,22 @@ sub fetch_license {
         $license_url->query ? $license_url->query . "&$tail" : $tail
     );
     warn "LICENSE: $license_url\n" if ($debug);
-    my $ua = LWP::UserAgent->new;
-    $ua->conn_cache(LWP::ConnCache->new());
-    $ua->timeout(15);
-    $ua->agent( $ODM_UA_STRING );
-    my $req = HTTP::Request->new(GET => $license_url);
-    my $res = $ua->request($req);
-    if ($res->is_success) {
+    my $ua = HTTP::Tiny->new(
+        keep_alive => 1,
+        agent => $ODM_UA_STRING,
+        timeout => 60,
+    );
+    my $res = $ua->get($license_url);
+    if ($res->{success}) {
         warn "successfully retrieved license\n" if ($debug);
-        my $lic_string = $res->content;
+        my $lic_string = $res->{content};
         $lic_string =~ s/\s/ /g;
         write_meta( [undef,$lic_string] );
         $current_book->{license} = $lic_string;
         return TRUE;
         
     }
-    warn "error fetching license: " . $res->status_line . "\n" if ($debug);
+    warn "error fetching license: " . $res->{reason} . "\n" if ($debug);
     visual_warn( "There was an error fetching the license for this book" );
     return FALSE;
 }
@@ -1762,3 +1779,47 @@ sub show_license {
     $dialog->destroy;
 
 }
+
+__END__
+
+=head1 NAME
+
+gloc - A GNU/Linux Overdrive/EMusic download client
+
+=head1 SYNOPSIS
+
+    gloc <some_book.odm>
+
+=head1 DESCRIPTION
+
+GLOC is a download manager for the
+OverDrive and eMusic MP3 audiobook collections written in Perl+GTK. Lack of a
+native Linux client for downloading OverDrive audiobooks from libraries and
+retailers has left Linux users in the cold, and this program was written to
+fill that need.  eMusic compatibility was added later. It is developed and
+tested on Debian GNU/Linux but is expected to run on most flavors of Linux as well
+as any other platforms with the Perl bindings to the GTK+ libraries.
+
+=head1 AUTHOR
+
+Jeremy Volkening <jdv *at* base2bio.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2015-2016 Jeremy Volkening
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=cut
+

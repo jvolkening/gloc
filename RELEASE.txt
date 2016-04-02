@@ -1,5 +1,11 @@
 GLOC
 
+Version 0.006
+
+* Added multithreaded download support
+* Switched backend to HTTP::Tiny
+* Switched version numbering scheme
+
 Version 0.5.4b
 
 * Added checks for correct domain names in URL (contentreserve.com, emusic.com)
