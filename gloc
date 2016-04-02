@@ -1,0 +1,1764 @@
+#!/usr/bin/perl
+
+#############################################################################
+# embedded files
+#############################################################################
+
+package GLOC::Embed;
+
+$ui = <<XML;
+<ui>
+  <menubar name="MenuBar">
+    <menu name="FileMenu" action="FileMenu">
+      <menuitem name="Open" action="Open" />
+      <menuitem name="LicenseInfo" action="License" />
+      <separator />
+      <menuitem name="Quit" action="Quit" />
+    </menu>
+    <menu name="HelpMenu" action="HelpMenu">
+      <menuitem name="About" action="About"/>
+    </menu>
+  </menubar>
+</ui>
+XML
+
+$gloc_tux_16 = <<PNG;
+iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
+AAAASwAAAEsBnHd6xQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAO2SURB
+VDiNTc7rT1NnAAfg33vOaXtKW2zLzULBQrmjSHSCMEFGZmbmsiUbNSZjoovJWNyyuLDMwgxjH1iy
+kH1YcJrMObOE6WYYM1E/IOIlg4iDCYKAMLkMWyi1RUpLz+m5vPuyJXv+godYyt1WjmGOK6BHqEqN
+AOYBPARwLjjQNggA6U3WMgDHABQDcBCQMMdq+lmGdZPkquZblnhDdWg9+qcQk6cBOACUAOB1zPKy
+Ynuo6HJm0wAIAEYAzPOcPsekM+1cF0N3SUltu6SoVDp1qNHkckEBgM3v1OS9HOccKdtazHs8HnR0
+9S0bSmzVvstXHgNAa2sr02e8FlFBOSYSFSVFVdnVrGHm3+4B8MP3ph+M8p2dnRgaGobgmUuRPEX9
+1oqmAwBQ2FJIFFVmRSkqMYpMR9NTrNqOL2/XpTdZawF0U4kGG+pew/5iK6r37IAiBEMAfAC6rRVN
+tae//uqw3ZyhEeToCMNyXPNT3yqNbGycZajuEoBxoUc8uS+5Fy31EuoLBgGqbtqY730TwDjD0kvP
+nkfOetYWqZlP+JyZvvppH8OJdwocdi07dUgAUBNZkY9qig9CSM2AqfwTOLMcEJf++AhAjW3HA3Fn
+5jatGNHfutt4v4fY3RYNgHvasfdLbBYbsxb0T0Ymfsy79lsXw3EcZEXGue8v4LvzF9SCDx0zKWkp
+eQtzVF3sLx0BsJuNr9TXA2iQLY+OhZ8UlWbYbZlZudvJG/vLYU5MAsPpEGcyYS5uhiRlJyZOr0x6
+vb/XnIDKNQCYY+Mr9Z8BSCCsXCfcmPKqbPxbQWkThiaWkJVqQkhexg+PziActwb/VAC+7tARhd91
+EUADAJ4BUE4IGVtsC9JYJLgnnZvBu6/mYiUYhrvjJk6ev4hn4Sic0RykebbAP+tPDQ60UUIwDqCc
+2N2WHoPW+JKekF/cSSWvDC0sJqzYs+GNRrH6eCuS+Wz4AyEksz6YYk+QbOSvdy9mBxRFPRgVpS5S
+8MWWo0aN8YzDkqmLKRI4lsVGNIz8eCcOl7pAN8y4fHUA/XMEGr0BUkwByzFY8q0Joiy9TiilOH29
+UbNburGqEr1hs84JuhSh6846kl9YBH8giKkrp/DiCyF4wcIjUPrrze3flpWd+NjlKoyBUgpv+17t
+88G02+JYaohO2Kl6P4e+XZXgz89K/dts0C7c+cYRpn/Z6PpoyuzYT/bje3PBUEpBKQWhlOI/P79X
+wG+rEvaprJz5QcvTXgAcALmxPs2xqwKVk/1x7dXN0wH8zz8sL6WiUhItuQAAAABJRU5ErkJggg==
+PNG
+
+$gloc_tux_24 = <<PNG;
+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
+PNG
+
+$gloc_tux_32 = <<PNG;
+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
+RU5ErkJggg==
+PNG
+
+$gloc_tux_48 = <<PNG;
+iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlz
+AAAA4QAAAOEBcBgcLgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAABOvSURB
+VGiBnZp5dFzVnec/971Xr/YqqVSlzdosy5KxjQ3BNiBMAgFCIARnhiVJ0yHMpCeQhtOdIckQBISG
+4HI3ZOtsJE1naTrpcCCdznQgTJrQ2AYEtG3AxrHlTZK1WVu9Uqm2t7/5QwuSLBzI75zfqXO33+/7
+vdu793dLeJ7HQkl0doWB/wlcCGwBVi0odgEN2Au8CrwGvKp1p6f4E6SxK5GY9XP+rJ4HVALSbBUP
+OA7sAbqBHw+mtfJCG2IhgURn19XA94Hm94BDB54Evqd1p//rXQLvBP4SuAFQ34OvUwiRHtye+e5c
+xjyBqs57fobgJoClo/IeZB8zHfALrTu9qKcauxJh4M9mgZ/zpxiXhIQQAs/j9ZPbJ86bJ1DZ2fWt
+oKr8dSgUQNdNyoaN57l/KgmALPBT4NHwJT+Qgc8Bnwbif4oxIQSKpBBSwwSUAAWzgGUYO06kx7pE
+8vz/0y75/YeTlWGpramasck8fUOTWLYNM/NvL5ABgkAEWA+s4e15ekaRE4OobS8hhXJ/rKoLHAb+
+ABSAMpAENgshWoNKiKZEMzF/jGw5y1Bu0LE9q1VxJeW74YAqtTXXEgn66Dcm8TxXB67VutPPLecp
+0dkVZWbBXQfcDMTmyrzcMdY1KKxuqsS1dAZHNF553EXtqCa6dRzhW2RqipmR+jWwbzCtFZbz13R3
+xTYX91eWY0lVoSSKpJDTp2StqH1HJDrv6auvibesbasnVyjTc/wUuUL5m9nu9J1/rMtmyYSBmzzH
+vP2saP+GW278EDU1NfPlnucxOTnJww8/TN/ENKlPBpErcnuBR4FfLN1V3kma70v9MBlKfnZ1sp2w
+GuXI+GGGc0PHJIFboyoyAb9KoaBjmhaKIr72bowCaN3pYviSH/x4TWq3uOEjF1Eul+nv76e/v5++
+vj76+/spFArcfPPNiKJG5smAW9x5278Wd972T+8WPEDYF/iWbuuYjoUsJGRJBkSdIoTk9zyQBUgC
+bNdj8kV19N0abuxKnGNnnJ+vqmhfOzAwcNoOtjCdSqUYGemRAqWJHXIodV2is+t/aN3pg+/Gjy+f
+GDAjU/P2fJKMJAgonusVXNeLOa6LLEvIkqDyfL0NOPpHgPuAe4G7jT7Hlw/mKRQWT+GlZDRNA8DO
+9SOHUpuAfYnOrq8Cf6t1p+0z+ZtWR8+OSBEQEp4Q2J6L55FXPBi2HDtmmg5+nw+f4sOQnQ+diUBj
+VyIJPAtsArCyNgdPHCQajZ4GPBQKUSwW0TQNXddnCBTH8c8Uq8BXgasTnV0f0brT2XfyKRQ+rPpU
+/IoPyzUxHRMPBiQEh8q6SdkwqIiHCAZ8CM/7izOArwV2zoEH8EyPsq5zzUe3oSi++TVwYedF/M2D
+27n1c7fPgwdwSmNLzV4IvJDo7Eq9IwGPm0JKiJASRrfKmLaOkDgoCcTXS7pFLq+j+hRCQRXZJ29I
+bP5y1TLgm4AXgXUL810Dbv/crVxy8QV88Qt/zfT0NJIk8embbuT1PS+zcd1qrvnIVW/XL2vLfeo3
+ArsSnV31SwtW3lnToEqBtog/hk/xUTSKFM0SsqI8Ik2+/NArtuVOTmby2LZLc32CcEAV+KTvLQHf
+Ngu+bakDp+iOr+9oIf23j1BdEaY6EWPrpvUcOrifZ377O17rfon3Xzg/YHiu5QDPL0PiLODFRGdX
+y6LcoPdoxB8hGUpi2gZTZQ3LMUaOfWVovwTgeM6PssUy2XyJWDhILBLCp8g3Vlx079mz4NcCu4Gm
+ZZz+zBy2dx/tOcxkfw+rJp/h8D9+isdubuBiZQ/x/BFam2rYv//NhW0k4Erg58vYawV2Jzq72gFW
+dCW3+H3+j8SDFQTVMEWzQK6cw3Wc780ZIoz5oGna1vCohmU7rGpMEQ0HhAzPNHyp+jxgF1C3jLMf
+AjfjkX/z+ad4/qELaF7XSqJ1JbUbNtG+rpZ//0oHF7q/Y+StnYsIZF/Z4TLzFX9sGbuNwO7KrXdu
+8Mvyb+LBCtFQ0YDtWozlxyibRb1PnXx4nsBQ99dLju3s0HIlxrVpIuEA1VVRgn6l0RrY8jIzZ5Kl
+8o3BtHbbYFrz/IpIfvn6IKmGPrBeBOslMHcDe5BTOVK1J0jfcto5rkXrTrvArcDfL2O/JtD01mth
+NVJdHa7GLweY1qfQShks173Xu9+z5wkAZLrT9+uGOT54SsMwLdqaaohHg7jDG/1u/jT8Dw6mtS/M
+JQI+ebOlOpiijCMdg8AbEDiA5Z3Ckk1EVR5fZe1SG+sAtO60p3WnPw/sWFgohTUibUcDVeEUdfEG
+dMdgJDdMySoN9W8f+/p8vYWNPNf7s+mCTt/QBK7n0tFaS2U8in7gWvDmq941mNbun0sIIepzZbv2
+F3vasdQGSBSwcLBkC1+zBgmJvHkNSvuXqKxYNAqfWpjQutNdzHwYkSSP6IbdpCKVNFU04bg2Y/lR
+pvQpPMu+YRHRhYlMd/p503Z+eWo8x+RUgXgkSE0yQkiNoR+4ygNuH0xrDy/pyY8DRGo7cFt+gF6+
+HjdYiS1aKGSuw4z8BGXtA0iRWq647JKF7W4QQmxeQmI7cKe/ZR+JKpe62AqigRhT5SynckPoRvmn
+vTsmXn1HAgDhDzy6WyfDkd5RJrQia1vraKypRC21iuLOWz+4sK4Qogn4O4D169bjKFGsuvsoh/8d
+I/VL7BUPYoVWYpkmnlC48orLFjVPJBLPCSFiCzMrPvjY5VUdfdTG6qmJ1qGVNIamBsmerGfqhc/s
+XIp3EYHGrsQq4BH/ub+iqJc4OTLJuFZgffsKmhuSqKrvuqqL7v1/c/VVVf0PwBeNRunoaKNUKs6o
+5VIqlyiVCvNa1sts2bKJWCz6NtiKiviaNWv2zaXb7q3dFQ1UXL2yqpXmRCt5I8fw9BCTGYdCzwUA
+3136oVs6At8E/EItoax5llFtmv7hDJmpAisbkqxZWUso4Luy6qKuF6PR6PZNmzZ1AFx26QfwkJnO
+TVMoFGe1MPObL5KfLlAum3jIXPffPjbvrLe3l7Vr17bF4/HHW79Suzfkj76/paqV2ngdRbPAyPQQ
+Y5ks0/svBUeBmRvhI4uGce7g1diV+DAzB7R5scdXm/aRK5QV1RVSx8o6/H6FoVGN4/3jJJUxDu/+
+Cbqu84//8Cjnnrvwni6QZRnHOf2AOT4xwUev/e/E43EymQy1tbW03FCPUVukJbGKqlACy7Xoy/Qx
+mht1tVeu8ZxiXF5i5gNad3o3gDILXsz2/iJRqo/tKP/hij3D41P/17BseUNHIzXJGIZlMzIqUFa8
+n7PUAdafvREPmapkklg0hur3I4TAdV0MwyA3NYWmZXBdl8rKJJdffhk7d+5iy/nn01d7BKO2SFNl
+C6lICsM2ODZ+lInSuKN7xQ87xfjVwP9eAu3bzEY25qbQZcxc1BfKEPDw1CsPPWPbzuWZbMF+/dBJ
+TMuho6WWpvoqkqu2UrXueoKhCG2r26mqSuJTVTzPw3Vnohp+v59UdQ1tq9vxqQEs2+XGGz+BYRtM
+rhmi+YJ6GiuaqY7WULKKHBk7zERhzCob5YsHvpr9PfAAML4E28ZEZ9fWhQRuPW2s4cuDaa0EkH1l
+x07HtS+aypetAz2DZHNF1rTWsaI2wfC0n4d+upexzDS6Yc6qsUgN08B2HOpX1CNkhfiKSs66bSWp
+sxI0VTbTnGihaBQ4MXmMTGnCMGxjy+COzCsAWnc6B9yzDL5bAUTD3ZU1wCCwMF4wBLQMpjVnYYvq
+VVvuCTe//yE1WEVrczWNtZUMDGfoHZ5EFh533bKVD3WuXsbX2/LUvl/w+P7HCPsj1MdWkIqmmCxO
+MJA9iXYqR/+/DqfLJ41FgBOdXb5ZTNULsnVgxdypcHGwYyYGuQi8EEIkfNPXR7O7cIwcvQMT9A5O
+0NyQZENHA9FwkPt/uIvPP/IME5lpHMtapKPZYb70mzt4/MBjpGI1tKXaqYokGZ4api/Tx6ljo4Rf
+rUSdCmxeggWtO20xE35ZKAHgcokll5NZ+eUyeVcIIc4pF6Z4X3KQ8ZMH6B0cZ89bffgVmfWrG2lt
+THKoV+OGu57kty8dwXVsXMfm6Z5/47O/voWh/CBtqXZaq9oQkqBXO8FJrRcnAxNPFchNTOO67hYh
+ROBdYlqnAGuXZDosfx/eJEkSuq7T0lhL0+Hn+MQ1H+NHTx9h36GTtDZW09qQIhGPMDKWZfuPu3n6
+5R7U1bvoLR2kId5IKlxN0B8kU8wwNDVAsVQgeCxOm1jDW+Uj5HI5LMuKM7PDvLrE/+F3IrBySebw
+YFozlql8jq7rSJLE5k3nMj42yraLV9K5vpavP/kWbxwdYipfoq2pmrbmalKJKId7Ryn2rKbtfTGq
+V7hIksOJyeOMT5+iPdHBqmI7kY4w0UiUN17fx9Fjx7Ht5YMTWne6kOjsmgAW3pubJGYW8EKpaexK
+LBf3lDOZDIZhcLTnCNdcdSU+RVCfCvGNOy7gCx/fwNhElr1v9ZEv6FRGQ1ywoYWG6lqG3mrl9/+y
+gt3P24xPFPjsuZ9hW+hqtNEipiPx7HMvcNaa1Vx7zVVz26+51HmisysALL2nDyvAEeDDczlCCL/n
+edcyE6+cl+//eUfrhqYo07rL9599glWtdyFLEgKP107tZY/zWyKb+5k+vIXXD5k01iWor65g41kN
+TGYLZLJFxjMRMoNreO6Ux7nSs/T264yMjKAoCrtefIWrr/wgwElg0f1zVrZx+tGnRzTcXXkr8AMA
+RfYhz8TfTde1HuzbnkkD3uS3L7kzVJ3aETp7m8rEfg689CKf/mUfGz++lZO+QaatPFWhKiqDCRKh
+FIPHQ+x/OUo8HCceC9HSkESWJCRJYnAkQzZfRssWKOcnsCYOYGZ6EHqGx//yPKoD9nBHTfSLyb96
+4Yk5lFUX3fuAJPi8LEsxx3Fx3PnQ/6dFw92VUeCULCnhmD9KdaQa07UoGHlKRtE8x+cvb4rEgmrt
+elUHjufGOJQdoOh6RNUosUCMZKSGoC+IJElMlbJM6RqjE3kme9rxMqtRfSo1yRiJWJjaVAzDcigU
+ywyOTpEv6pTKJjHV4n2JLKurcuSKkv74ofo3HESNLMsNAb+iJisiSLLE2MQ0Jd3A8zgKbBSe59Fw
+d+I7PsV3RypSTXNlC8lwkqnSFHlzmpJZwvEc8ECRZAK+AH5fiJgaxSerhPxBikaRvFlgdHqEgj6N
+7Vps67iKm8++HscM8djTPTz1Qi+SJBMOqDTWVVERDxENB8kXdcq6wVS+RKlkUijpc3MZ8KiIhamM
+hUklYmi5Akd6R5mcmvY8l0u17vSu+dNo8z2pPSE1tKkuWk9NrJZ4oAKf7MPDxfNAksTMk5uY+dWt
+Mrqto5Umyet5smWNmnCSq1ZfyifP/hgx/9vnfgBtWueff3ecXz9/iOGcoDIeIhL2U1+dIOj3EQn5
+EQJcz8NzPRzXRVEUwMO0XSa0PCNjGiPjOWzb+Y3Wnb4Wljzyrbqv7nZJEt8Iq1E15o8S8IUIq2EU
+ScZ2XTzPxXQNymYZw9YpWkV8ZYuTr2VZLa3kPx//OUKIZdbf26L/1z/Td/IE/3aimqePxZjQ/YQC
+KqqiEAypBFUfwgMhyziOQ6FsUCwZlHSTctnUbde5I9u940fzm87SCHLVF8LRRCDy0Cer4rf1Y6vH
+dRdFqKiyD0UIKiQf66MJzo0l2BiOEjw1yKN7JM6+ZBsfverSM4IHmPrdwyTCJ8Evgw8G8iqvj4bZ
+e1LmzaE4U2U/liuj2z5KukyuJOUd1z3merxgBQv3FZ7/9js/sy6U3BObT8RbCq2eLSMcBbwEnr8B
+4cpgi5nvtSOgmOPI8Qx1120nHKs8I3gto6E980U6zrLA54DPnVUHFGM2z55N22T31vVztOacyrue
+e8cHtmUf6g49sF4lYCtEy4hoCSJFCI4gxAGQB0CdAN+shk1WrzT4/XfuZM8bB7Fs9zTNF8t88/v/
+xKc+8QnqV1gQNCFoQFCHYAkCpdm0MVPmN8n3VWimpn7rTOBh9ka2VMZ1X31TrBQgWgJbnlFHAtsA
+uwCOD6QguD6QPKS4RXuDxAXXfJLG5hauuHQrwUAAx3V4/c2DvLZvP6VSmfu2NROu0SFondbbM2mH
+0nAklztU+frBHuOBrz2zb2/nXwjp/jO8+S5LQNMMozQa6vfVTVf6E7oPV8ySkMGWZkmV3077Zarr
+A6xMBjl49AQ9R08s66whpSJF9cXg535ll8yemqEjbyrfvPsn+5+SZMr4EH+4gTPuCssSeOsfDo89
+cZTLHvzYxptCEbYKn1PtD7sNobryilBDPi4FzQWjMjNCY2P+qbHpwgs1MYywn0zMz6QksAybgG4R
+sBz8svC22J53vhIyQHkbvOsIxp5rPPSr53J/9cSLA8dcgeG4mAUwX3jSc5bDOCfvuIgBLr1UKNYp
+gj4PvyVQb7mwrf3i80J/Hk06m6NNxRY1akU9U3Kyh+MnX33DeOLvnz72svCQPQ/hyTM9J7m4rsCV
+JZxk2K987X+t/buGK4fXSaGZRWuMB+3Jl+tfe+Rnw5/ZMzCZDXkYPgn9t8e85U7E743AUjKqhr/k
+obolfHd8oG1VRSxYY5me9ON9R3uymulJCrLrITwPoXgzBGyBJ0u4joWryDibViTDn7ux4c5gpdXg
+WXJZG5N+9cC/vPkkOuWn/oDlvcc/arxrAss2FkK65BKk1ATSUA45mkAyHUTZQAraSEEFVwOCftx8
+Frc6hDMex23dh/ukd+ap8W7l/wM6sBRcLa7apgAAAABJRU5ErkJggg==
+PNG
+
+$gloc_tux_64 = <<PNG;
+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
+QmCC
+PNG
+
+
+package main;
+
+use strict;
+use warnings;
+
+# core modules
+use Config;
+use Digest::SHA qw/sha1_base64 sha1_hex/;
+use Encode;
+use File::Basename;
+use File::Copy qw/copy/;
+use Getopt::Long;
+use List::Util qw/min/;
+use MIME::Base64 qw/decode_base64/;
+use threads;
+use threads::shared;
+use Thread::Queue;
+use Time::Piece;
+
+# non-core modules
+use File::HomeDir;
+use Gtk2 qw/-init/;
+use Glib qw(TRUE FALSE);
+use HTML::Entities;
+use LWP::UserAgent;
+use LWP::ConnCache;
+use XML::Simple;
+
+# Register global "constants" (was using 'Readonly' but removed to minimize
+# non-core dependencies)
+
+my $PROG_NAME     = 'GNU/Linux OverDrive/eMusic Client';
+my $PROG_VERSION  = '0.005004';
+my $ODM_UA_STRING = 'OverDrive Media Console';
+my $EMX_UA_STRING = "GLOC/$PROG_VERSION";
+my $OMC_VERSION   = '3.1.0.1';
+my $OS_VERSION    = '5.1.2.2600.SP2';
+my $CLIENT_ID :shared;
+my $LIC_HASH;
+my $OVERDRIVE_DOMAIN = '(?:contentreserve.com|overdrive.com)';
+my $EMUSIC_DOMAIN    = 'emusic.com';
+
+# misc globals
+my $retries = 3;
+my $debug = 0;
+my %info_labels;
+my $embedded = get_embedded();
+my $current_book;
+my $current_timeout;
+my $current_type :shared;
+my $cwd :shared;
+
+GetOptions(
+    'retry=i' => \$retries,
+    'debug'     => \$debug,
+);
+
+## Build queue system (MUST be done before using Gtk2!!)
+my @status_queue :shared;
+$Config{useithreads} 
+    or die "This program requires threaded perl";
+my $download_queue = Thread::Queue->new;
+my $download_thr = threads->create( \&download_file );
+
+## Build main GUI
+my $mw = Gtk2::Window->new( 'toplevel' );
+$mw->signal_connect( 'delete_event' => \&clean_quit );
+$mw->set_default_size( 400, 500 );
+$mw->set_title( "$PROG_NAME v$PROG_VERSION" );
+
+## Set up icon theme
+my $it = Gtk2::IconTheme->get_default();
+for (16,24,32,48,64) {
+    $it->add_builtin_icon( 'gloc-tux', $_, $embedded->{"icon_$_"} );
+}
+
+$mw->set_default_icon_name( 'gloc-tux' );
+
+# Main layout box
+my $vbox_main = Gtk2::VBox->new( FALSE, 0 );
+
+# Define menu structure
+my @menu_actions = (
+    # name        stock id     label
+    [ "FileMenu", undef,      "_File" ],
+    [ "HelpMenu", undef,      "_Help" ],
+    # name        stock id     label           accelerator   tooltip   callback
+    [ "Open",    'gtk-open',  "_Open",        "<control>O", "Open",    \&open_odm     ],
+    [ "License",  undef,      "_License Info", undef,       "License", \&show_license ],
+    [ "Quit",    'gtk-quit',  "_Quit",        "<control>Q", "Quit",    \&clean_quit   ],
+    [ "About",   'gtk-about', "_About",        undef,       "About",   \&show_about   ],
+);
+my $actions = Gtk2::ActionGroup->new( "Actions" );
+$actions->add_actions( \@menu_actions, undef );
+my $ui = Gtk2::UIManager->new;
+$ui->insert_action_group( $actions, 0 );
+$mw->add_accel_group( $ui->get_accel_group );
+$ui->add_ui_from_string( $embedded->{ui} );
+$vbox_main->pack_start( $ui->get_widget( "/MenuBar" ), FALSE, FALSE, 0 );
+
+# Create book info pane
+my $table_book_info = Gtk2::Table->new( 6, 2, FALSE );
+my $hbox_book_info = Gtk2::HBox->new( FALSE, 0 );
+my $thumbnail = Gtk2::Image->new;
+my $frame_thumbnail = Gtk2::Frame->new;
+$frame_thumbnail->set_shadow_type( 'in' );
+$frame_thumbnail->add( $thumbnail );
+$thumbnail->set_size_request( -1, 120 );
+$thumbnail->set_alignment( 0, 0.5 );
+$table_book_info->attach(
+    $frame_thumbnail,
+    0, 1, 0, 6,
+    [],
+    ['expand','fill'],
+    8,
+    0,
+);
+foreach (
+    ['Title'     => 1,2,0,1],
+    ['Author'    => 1,2,1,2],
+    ['Narrator'  => 1,2,2,3],
+    ['Publisher' => 1,2,3,4],
+    ['Duration'  => 1,2,4,5],
+    ['Expires'   => 1,2,5,6],
+) {
+    my ($text,@coords) = @$_;
+    my $lb = Gtk2::Label->new( undef );
+    $lb->set_markup( "<b>$text:</b>" );
+    $lb->set_alignment( 1, 0.5 );
+    $table_book_info->attach(
+        $lb,
+        @coords,
+        ['fill'],
+        ['expand','fill'],
+        4,
+        0
+    );
+    my $l = Gtk2::Label->new( undef );
+    $l->set_alignment( 0, 0.5 );
+    $coords[0] += 1; 
+    $coords[1] += 1; 
+    $table_book_info->attach(
+        $l,
+        @coords,
+        ['fill'],
+        ['expand','fill'],
+        4,
+        0
+    );
+    $info_labels{$text} = $l;
+}
+$hbox_book_info->pack_start( $table_book_info, FALSE, FALSE, 0 );
+
+# Create file list pane
+my $COLUMN_ID          = 0;
+my $COLUMN_FETCH       = 1;
+my $COLUMN_TITLE       = 2;
+my $COLUMN_DURATION    = 3;
+my $COLUMN_SIZE        = 4;
+my $COLUMN_STATUS      = 5;
+my $COLUMN_CLICKABLE   = 6;
+my $COLUMN_PROGRESS    = 7;
+my $sw_file_list = Gtk2::ScrolledWindow->new( undef, undef );
+$sw_file_list->set_shadow_type( 'in' );
+$sw_file_list->set_policy( 'never', 'always' );
+	
+my $file_list = Gtk2::ListStore->new(
+    'Glib::Int',
+    'Glib::Boolean',
+    'Glib::String',
+    'Glib::String',
+    'Glib::String',
+    'Glib::String',
+    'Glib::Boolean',
+    'Glib::Float',
+);
+        
+
+my $tview = Gtk2::TreeView->new($file_list);
+
+#---------------------------------------------------------------------------#
+
+my $renderer = Gtk2::CellRendererToggle->new;
+$renderer->signal_connect( toggled => \&toggle_bool, $file_list );
+my $column = Gtk2::TreeViewColumn->new_with_attributes(
+    "Fetch?",
+    $renderer,
+    active      => $COLUMN_FETCH,
+    activatable => $COLUMN_CLICKABLE,
+);
+$column->set_sizing( 'fixed' );
+$column->set_fixed_width( 50 );
+$column->set_alignment( 0.5 );
+$tview->append_column( $column );						  
+
+#---------------------------------------------------------------------------#
+
+$renderer = Gtk2::CellRendererText->new;
+$column = Gtk2::TreeViewColumn->new_with_attributes(
+    "File name",
+    $renderer,
+    text => $COLUMN_TITLE
+);
+$tview->append_column( $column );
+
+#---------------------------------------------------------------------------#
+
+$renderer = Gtk2::CellRendererText->new;
+$renderer->set( 'xalign' => 0.5 );
+$renderer->set( 'xpad'   => 10  );
+$column = Gtk2::TreeViewColumn->new_with_attributes(
+    "Duration",
+    $renderer,
+    text => $COLUMN_DURATION,
+);
+$column->set_alignment( 0.5 );
+$tview->append_column( $column );
+
+#---------------------------------------------------------------------------#
+
+$renderer = Gtk2::CellRendererText->new;
+$renderer->set( 'xalign'=> 0.5 );
+$renderer->set( 'xpad'  => 10  );
+$column = Gtk2::TreeViewColumn->new_with_attributes(
+    "File size",
+    $renderer,
+    text => $COLUMN_SIZE,
+);
+$column->set_alignment( 0.5 );
+$tview->append_column( $column );	
+
+#---------------------------------------------------------------------------#
+
+$renderer = Gtk2::CellRendererProgress->new;
+$column = Gtk2::TreeViewColumn->new_with_attributes(
+    "Status",
+    $renderer,
+    text  => $COLUMN_STATUS,
+    value => $COLUMN_PROGRESS,
+);
+$column->set_sizing( 'fixed' );
+$column->set_fixed_width( 100 );
+$tview->append_column( $column );		      
+
+#---------------------------------------------------------------------------#
+
+$sw_file_list->add( $tview );
+
+my $hbox_controls   = Gtk2::HBox->new( FALSE, 0 );
+my $btn_select_all  = Gtk2::Button->new_with_label( 'Select All'     );
+my $btn_select_none = Gtk2::Button->new_with_label( 'Select None'    );
+my $btn_download    = Gtk2::Button->new_with_label( 'Start Download' );
+$btn_download->signal_connect( 'released' => \&toggle_download );
+$btn_select_all->signal_connect(
+    'released' => sub {$file_list->foreach( \&set_bool, [$COLUMN_FETCH => 1] )} );
+$btn_select_none->signal_connect(
+    'released' => sub {$file_list->foreach( \&set_bool, [$COLUMN_FETCH => 0] )} );
+$hbox_controls->pack_start( $btn_select_all,  FALSE, FALSE, 0 );
+$hbox_controls->pack_start( $btn_select_none, FALSE, FALSE, 0 );
+$hbox_controls->pack_end(   $btn_download,    FALSE, FALSE, 0 );
+
+$vbox_main->pack_start( $hbox_book_info,FALSE, FALSE, 0 );
+$vbox_main->pack_start( $sw_file_list,  TRUE,  TRUE,  0 );
+$vbox_main->pack_start( $hbox_controls, FALSE, FALSE, 0 );
+my $statusbar = Gtk2::Statusbar->new;
+$vbox_main->pack_end( $statusbar, FALSE, FALSE, 0 );
+$mw->add( $vbox_main );
+$mw->show_all;
+
+# Check for filenames passed in to the program and open if found
+if ($ARGV[0]) {
+    if (-e $ARGV[0] && -f $ARGV[0] && -R $ARGV[0]) {
+        load_file($ARGV[0]);
+    }
+}
+
+Gtk2->main;
+
+
+
+#############################################################################
+# Subroutines                                                           
+#############################################################################
+
+sub download_file {
+
+    my $term_flag = 0;
+    $SIG{'TERM'} = sub {$term_flag = 1};
+
+    FILE:
+    while (my $file_ref = $download_queue->dequeue()) {
+        my ($id, $filename, $url, $filesize, $license) = @{ $file_ref };
+
+        {
+            lock $cwd;
+            $filename = $cwd . $filename;
+        }
+
+        # initialize user agent
+        my $ua = LWP::UserAgent->new;
+        $ua->conn_cache(LWP::ConnCache->new());
+        $ua->timeout(15);
+
+        # set UserAgent (critical for OverDrive files)
+        {
+            lock $current_type;
+            warn "curr_type: $current_type\n" if ($debug);
+            my $ua_string = $current_type eq 'odm' ? $ODM_UA_STRING
+                          : $EMX_UA_STRING;
+            $ua->agent($ua_string);
+        }
+
+        # fetch file size if necessary (currently only eMusic files)
+        if ($filesize eq '??') {
+            my $request  = new HTTP::Request('HEAD', $url);
+            for (1..$retries) {
+                my $response = $ua->request($request);
+                $filesize = $response->header('Content-Length');
+                next if (! defined $filesize);
+                {
+                    lock @status_queue;
+                    push @status_queue, "$id:SZ:$filesize";
+                }
+                last;
+            }
+        }
+
+        # hard limit of 200MB on file size to download
+        if ($filesize > 200*1024**2) {
+            {
+                lock @status_queue;
+                push @status_queue, "$id:VW:Download of files > 200 MiB disabled";
+            }
+            next FILE;
+        }
+
+        # double-check that the file isn't already downloaded
+        if (! $filesize) {
+            {
+                lock @status_queue;
+                push @status_queue, "$id:SC:Error";
+            }
+        }
+        elsif (-e $filename && -s $filename == $filesize) {
+            {
+                lock @status_queue;
+                push @status_queue, "$id:SC:Completed";
+            }
+        }
+
+        else {
+            warn "Downloading $url to $filename\n" if ($debug);
+
+            {
+                lock @status_queue;
+                push @status_queue, "$id:SC:Downloading";
+            }
+
+            my $tmpfile = $filename . '.part';
+            open my $tmpfh, ">", $tmpfile;
+            binmode $tmpfh;
+
+            my $req = HTTP::Request->new( GET => $url );
+            {
+                lock $current_type;
+                if ($current_type eq 'odm') {
+                    $req->header('ClientID' => $CLIENT_ID);
+                    $req->header('License' => $license);
+                }
+            }
+
+            my $size = 0;
+            my $last_frac = 0;
+
+            TRY:
+            for (1..$retries) { # try each request up to $retries times
+
+                my $req = $req;
+                $req->header('Range' => 'bytes=' . $size . '-');
+
+                warn "Try $_...\n" if ($debug);
+
+                # Make the request and handle the incoming data
+                my $res = $ua->request( $req, sub {
+
+                    # Run with every data chunk received
+                    if ($term_flag) { #if TERM rcvd
+                        $term_flag = 0;
+                        die("Aborted by user");
+                    }
+                    print {$tmpfh} $_[0] or die "Can't write to $filename: $!\n";
+                    $size += length $_[0];
+                    die("Returned more data than expected") if ($size > $filesize);
+                    my $fraction = $size/$filesize*100;
+                    if ($fraction - $last_frac > 5) {
+                        {
+                            lock @status_queue;
+                            push @status_queue, "$id:PU:$fraction";
+                        }
+                        $last_frac = $fraction;
+                    }
+                });
+
+
+                # check the outcome
+                next TRY if ($_ < $retries && $res->header('X-Died')
+                    && $res->header('X-Died') =~ /^read timeout/);
+                close $tmpfh;
+                if ($res->is_success && -s $tmpfile == $filesize) {
+                    {
+                        lock @status_queue;
+                        push @status_queue, "$id:SC:Completed";
+                    }
+                    copy ($tmpfile => $filename);
+                }
+                else {
+                    warn "File size did not match expected value\n"
+                        if ($debug && -s $tmpfile != $filesize);
+                    {
+                        lock @status_queue;
+                        push @status_queue, "$id:SC:Failed";
+                    }
+                }
+                last TRY;
+            }
+
+            unlink $tmpfile;
+        }
+
+        # If the queue is empty, send signal that download is done
+        if (! $download_queue->peek) {
+            lock @status_queue;
+            push @status_queue, "$id:DC:Done";
+        }
+        
+    }
+
+}
+
+sub end_download {
+
+    update_file_list();
+    $btn_download->set_label( 'Start Download' );
+    $file_list->foreach( \&set_bool, [$COLUMN_CLICKABLE => 1] );
+    $btn_select_all->set_sensitive(  TRUE );
+    $btn_select_none->set_sensitive( TRUE );
+    {
+        lock @status_queue;
+        @status_queue = ();
+    }   
+
+}
+
+sub toggle_download {
+
+    if (defined $current_timeout) { # a download is running
+
+        #empty queue and tell current download to stop
+        if ($download_queue->pending > 0) {
+            $download_queue->dequeue( $download_queue->pending );
+        }
+        $download_thr->kill( 'TERM' );
+
+        #end_download();
+        return;
+
+    }
+    start_download();
+
+}
+
+sub set_bool {
+
+    my ($model,$path,$iter,$arg_ref) = @_;
+    my ($col, $bool) = @{ $arg_ref };
+    my $status = $file_list->get( $iter, $COLUMN_STATUS );
+    $bool = 0 if ( $status eq 'Completed' );
+    $file_list->set( $iter, $col => $bool );
+    return 0;
+
+}
+
+sub toggle_bool {
+
+  my ($cell, $path_str, $model) = @_;
+  my $path = Gtk2::TreePath->new( $path_str );
+  my $iter = $model->get_iter( $path );
+  my ($fixed) = $model->get( $iter, $COLUMN_FETCH );
+  $fixed ^= 1;
+  $model->set( $iter, $COLUMN_FETCH => $fixed );
+
+}
+
+sub parse_emx {
+
+    my $filename = shift;
+    my $book = {'source' => 'emx'};
+
+    # read the .emx XML file into a hash
+    my $xml = new XML::Simple;
+    my $data = $xml->XMLin( $filename,
+        ForceArray => ['TRACK','ARTIST','Part','Creator'],
+        GroupTags  => {TRACKLIST   => 'TRACK',
+                       },
+    );
+
+    #EMX files have only track info, so we get book info from first track
+    my $first_track = $data->{TRACKLIST}->[0];
+    $book->{type} = $first_track->{MIMETYPE};
+    if ($book->{type} ne 'audio/mpeg') {
+        visual_warn( "This does not appear to be an Emusic MP3 book" );
+        return 0;
+    }
+
+    $book->{media_ID}    = $first_track->{ALBUMID};
+    $book->{play_on_PC}  = 'NA';
+    $book->{play_count}  = 'NA';
+    $book->{burn_to_CD}  = 'NA';
+    $book->{burn_count}  = 'NA';
+    $book->{play_on_PM}  = 'NA';
+    $book->{SDMI_tfr}    = 'NA';
+    $book->{nonSDMI_tfr} = 'NA';
+    $book->{tfr_count}   = 'NA';
+    $book->{exp_date}    = 'NA';
+
+    my $title = decode_entities( $first_track->{ALBUM} );
+    $book->{title}         = $title;
+    $title =~ s/\W/_/g;
+    $book->{file_base}     = $title;
+    $book->{publisher}     = 'Unknown'; # not listed in EMX
+
+    # for added security, check that URL resides on proper domain
+    ($book->{thumbnail_url})  = ( $first_track->{ALBUMARTLARGE}
+        =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$EMUSIC_DOMAIN\/.*)\Z/i );
+    ($book->{thumbnail_url2})  = ( $first_track->{ALBUMART}
+        =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$EMUSIC_DOMAIN\/.*)\Z/i );
+
+    # Handle multiple authors, etc by appending 'et al' to first
+    my %multiples;
+    CREATOR:
+    $book->{author} = decode_entities( $first_track->{ARTIST}->[0] );
+    $book->{author}   .= ' et al' if (defined $first_track->{ARTIST}->[1]);
+    $book->{narrator} = 'Unknown'; # not listed in EMX
+
+    $book->{num_parts}     = $first_track->{TRACKCOUNT};
+
+    #number of parts used in 'open()', so check here for security purposes
+    die "bad track count" if ($book->{num_parts} !~ /\A\d+\z/);
+        
+    my $s = 0; # total length
+    my @parts;
+    for (@{ $data->{TRACKLIST} }) {
+        my $part = {};
+
+        # for added security, check that URL resides on proper domain
+        my ($url)  = ( $_->{TRACKURL}
+            =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$EMUSIC_DOMAIN\/.*)\Z/i );
+        $part->{url} = $url;
+
+        $part->{filesize} = '??';
+        $part->{number} = $_->{TRACKNUM};
+
+        #track number used in 'open()', so check here for security purposes
+        die "bad track number" if ($part->{number} !~ /\A\d+\z/);
+
+        $part->{filename} =  sprintf "%s_Part_%02d_of_%02d.mp3",
+            $book->{file_base}, $part->{number}, $book->{num_parts};
+        $part->{duration} = int($_->{DURATION}/60) . ':' .  sprintf('%02s',$_->{DURATION}%60);
+        $s += $_->{DURATION};
+        push @parts, $part;
+    }
+    $book->{parts}    = [sort {$a->{number} <=> $b->{number}} @parts];
+    $book->{duration} = int($s/3600) . ' hrs ' . int(($s+30)%3600/60) . ' min';
+    
+    if (@{ $book->{parts} } != $first_track->{TRACKCOUNT}) { #internal check
+        my $counted = @{ $book->{parts} };
+        my $reported = $first_track->{TRACKCOUNT};
+        visual_warn( "EMX format error: part count mismatch ($counted v $reported)" );
+        return 0;
+    }
+
+    $book->{license} = 'NA';
+
+    return $book;
+
+}
+sub parse_odm {
+
+    my $filename = shift;
+    my $book = {'source' => 'odm'};
+
+    # read file, stripping out the <Description> entity because XML::Simple
+    # seems to have a hard time with it in some files.
+    my $file_contents;
+    {
+        local $/;
+        open my $in, '<', $filename;
+        $file_contents = <$in>;
+        close $in;
+        $file_contents =~ s/<Description>(.*)<\/Description>//s;
+    }
+
+    # read the .odm XML file into a hash and the CDATA metadata from
+    # the file into another hash
+    my $xml = new XML::Simple;
+    my $data = $xml->XMLin( $file_contents,
+        ForceArray => ['Format','Protocol','Part','Creator'],
+        GroupTags  => {Formats   => 'Format',
+                       Protocols => 'Protocol',
+                       Parts     => 'Part',
+                       Creators  => 'Creator',
+                       },
+        KeyAttr    => {Format    => 'name',
+                       Protocol  => 'method',
+                       },
+    );
+
+    # Metadata is sometimes CDATA and sometimes not !!!
+    my $meta;
+    if (defined $data->{Metadata}) {
+        $meta = $data->{Metadata};
+    }
+    else {
+
+        my $content = $data->{'content'};
+        $content =~ s/&/&amp;/;
+        $meta = $xml->XMLin( $content,
+            ForceArray => ['Creator'],
+            GroupTags  => {'Creators' => 'Creator'},
+        );
+    }
+
+    $book->{type} = $meta->{'ContentType'};
+    if ($book->{type} !~ /^MP3/i) {
+        visual_warn( "This does not appear to be an MP3 book" );
+        return 0;
+    }
+
+    $book->{media_ID}    = $data->{id};
+    if (ref $data->{License}) {
+        $book->{license_url} = $data->{License}->{AcquisitionUrl};
+    }
+    else {
+        $book->{license} = $data->{License};
+    }
+    $book->{play_on_PC}  = $data->{DrmInfo}->{PlayOnPC};
+    $book->{play_count}  = $data->{DrmInfo}->{PlayOnPCCount};
+    $book->{burn_to_CD}  = $data->{DrmInfo}->{BurnToCD};
+    $book->{burn_count}  = $data->{DrmInfo}->{BurnToCDCount};
+    $book->{play_on_PM}  = $data->{DrmInfo}->{PlayOnPM};
+    $book->{SDMI_tfr}    = $data->{DrmInfo}->{TransferToSDMI};
+    $book->{nonSDMI_tfr} = $data->{DrmInfo}->{TransferToNonSDMI};
+    $book->{tfr_count}   = $data->{DrmInfo}->{TransferCount};
+    $book->{exp_date}    = $data->{DrmInfo}->{ExpirationDate};
+
+    # a bit of a hack - Time::Piece doesnt' seem to handle %z well
+    # if not UTC as expected, just use given string
+    if ($book->{exp_date} && $book->{exp_date} =~ s/Z$//) {
+        my $t = Time::Piece->strptime( $book->{exp_date}, "%Y-%m-%dT%T" );
+        $t += $t->localtime->tzoffset;
+        $book->{exp_date} = join ' ', (
+            $t->fullmonth,
+            $t->day_of_month . ',',
+            $t->year,
+            $t->hms,
+        );
+    }
+
+    my $title = $meta->{Title};
+    $book->{title}         = $title;
+    $title =~ s/\W/_/g;
+    $book->{file_base}     = $title;
+    $book->{publisher}     = $meta->{Publisher};
+
+    # for added security, check that URL resides on proper domain
+    ($book->{thumbnail_url})  = ( $meta->{CoverUrl}
+        =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$OVERDRIVE_DOMAIN\/.*)\Z/i );
+    ($book->{thumbnail_url2})  = ( $meta->{ThumbnailUrl}
+        =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$OVERDRIVE_DOMAIN\/.*)\Z/i );
+
+    # Handle multiple authors, etc by appending 'et al' to first
+    my %multiples;
+    CREATOR:
+    for (@{ $meta->{Creators} }) {
+        my $role = lc $_->{role};
+        if (defined $book->{$role}) {
+            $multiples{$role} = 1;
+            next CREATOR;
+        }
+        $book->{$role} = $_->{content}; 
+    }
+    $book->{author}   .= ' et al' if ($multiples{author});
+    $book->{narrator} .= ' et al' if ($multiples{narrator});
+
+    my $format_ref            = get_format( $data->{Formats} );
+    $book->{base_url}      = $format_ref->{Protocols}->{download}->{baseurl};
+    $book->{num_parts}     = $format_ref->{Parts}->{count};
+
+    #number of parts used in 'open()', so check here for security purposes
+    die "bad track count" if ($book->{num_parts} !~ /\A\d+\z/);
+
+    my @parts = @{ $format_ref->{Parts}->{Part} };
+    my $s;
+    for (@parts) {
+
+        #track number used in 'open()', so check here for security purposes
+        die "bad track number" if ($_->{number} !~ /\A\d+\z/);
+
+        my $full_url = $book->{base_url} . '/' . $_->{filename};
+        $full_url =~ s/\\/\//g; # substitute forward slashes for backslashes
+
+        # for added security, check that URL resides on proper domain
+        ($_->{url})  = ( $full_url =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$OVERDRIVE_DOMAIN\/.*)\Z/i );
+        $_->{filename} =  sprintf "%s_Part_%02d_of_%02d.mp3",
+            $book->{file_base}, $_->{number}, $book->{num_parts};
+        my ($min,$sec) = split ':', $_->{duration};
+        $s += $sec + $min*60;
+    }
+    $book->{parts}    = [sort {$a->{number} <=> $b->{number}} @parts];
+    $book->{duration} = int($s/3600) . ' hrs ' . int(($s+30)%3600/60) . ' min';
+    
+    if (@{ $book->{parts} } != $format_ref->{Parts}->{count}) { #internal check
+        visual_warn( "ODM format error: part count mismatch" );
+        return;
+    }
+
+    return $book;
+
+}
+
+sub load_file {
+
+    my $filename = shift;
+    if (! -r $filename) {
+        visual_warn( "Couldn't open file for reading" );
+        return;
+    }
+    if ($filename !~ /\.(?:emx|odm)$/ig) {
+        visual_warn( "Unrecognized file extension" );
+        return;
+    }
+    my $book;
+    if ($filename =~ /\.odm$/i) {
+
+        # for OverDrive books, we need to calculate Client ID and License Hash
+        $CLIENT_ID = gen_client_id();
+        warn "set CL to $CLIENT_ID\n" if ($debug);
+        if ($CLIENT_ID) {
+            $LIC_HASH  = get_license_hash(
+                $CLIENT_ID,
+                $OMC_VERSION,
+                $OS_VERSION,
+            );
+            $book = parse_odm( $filename );
+        }
+    }
+    $book = parse_emx( $filename) if ($filename =~ /\.emx$/i);
+    return if (! $book);
+    $current_book = $book;
+    $current_type = $book->{source};
+    my ($file,$path) = fileparse($filename);
+    my $sum = sha1_hex( do {
+        local $/ = undef;
+        open my $infile, '<', $filename;
+        binmode $infile;
+        <$infile>;
+    } );
+    warn "sha1: $sum\n" if ($debug);
+    {
+        lock $cwd;
+        chdir($path) && ($cwd = $path);
+    }
+    my $download_dir;
+    if (my $meta = read_meta()) { # is possible already a download directory
+        if ($meta->[0] eq $sum) {
+            $download_dir = $path;
+            {
+                lock $cwd;
+                chdir $download_dir && ($cwd = $download_dir);
+            }
+            warn "already in valid download dir\n" if ($debug);
+        }
+        my $license = $meta->[1];
+
+        #only set license from current meta if sums matched
+        $book->{license} = $license if ($download_dir);
+    }
+    if (! $download_dir) {
+        my $dialog = Gtk2::FileChooserDialog->new(
+            'Please select parent directory',
+            $mw,
+            'select-folder',
+            'OK' => 'ok',
+            'Cancel'=>'cancel',
+        );
+        $dialog->set_current_folder($path);
+        if ($dialog->run eq 'cancel') {
+            $dialog->destroy;
+            return 0;
+        }
+        else {
+            my $tmp_path = $dialog->get_filename;
+            $dialog->destroy;
+            if (-d $tmp_path) {
+                my $t = $book->{title};
+                $t =~ s/\s/_/g;
+                $download_dir = "$tmp_path/$t/";
+                if (-e $download_dir) {
+                    visual_warn( "Directory exists and we won't overwrite" );
+                    return 0;
+                }
+                mkdir $download_dir;
+                copy( $filename => $download_dir . 'download.' .  $book->{source} );
+                warn "changing to $download_dir\n" if ($debug);
+                {
+                    lock $cwd;
+                    chdir $download_dir && ($cwd = $download_dir);
+                }
+                my $license = $book->{license} || 'missing';
+                write_meta( [$sum, $license] );
+                $book->{license} = $license;
+            }
+            else {
+                return 0;
+            }
+        }
+    }
+    warn "download dir: $download_dir\n" if ($debug);
+
+    # update display
+    $info_labels{Duration}->set_text( $book->{duration} );
+    $info_labels{Title}->set_text(    $book->{title}    );
+    $info_labels{Author}->set_text(   $book->{author}   );
+    $info_labels{Narrator}->set_text( $book->{narrator} );
+    $info_labels{Publisher}->set_text($book->{publisher});
+    $info_labels{Expires}->set_text(  $book->{exp_date} );
+
+    # attempt to fetch cover thumbnail if necessary
+    # GLOC used to name it 'thumb.jpg', but to increase compatability with
+    # other software we now use the more standard (but perhaps more cryptic)
+    # 'folder.jpg'. For backward compatability, try to recognize either one.
+    my $thumbnail_file = -e 'thumb.jpg' ? 'thumb.jpg' : 'folder.jpg';
+    warn "thumb: $thumbnail_file\n" if ($debug);
+    if (! -e $thumbnail_file) {
+        my @urls;
+        push @urls, $book->{thumbnail_url} if (defined $book->{thumbnail_url});
+        
+        # this is a hack because some (older?) eMusic .emx files have bad
+        # thumbnail URLs. Will probably change in the future.
+        if ($current_type eq 'emx' && defined $book->{thumbnail_url}) {
+            my $url = $book->{thumbnail_url};
+            $url =~ s/images(?=\.emusic\.com)/cf-images/;
+            $url =~ s/images\/book\/0\//images\//;
+            push @urls, $url;
+        }
+
+        push @urls, $book->{thumbnail_url2} if (defined $book->{thumbnail_url2});
+        URL:
+        for (@urls) {
+            my $u = $_;
+            warn "fetching thumbnail from server: $u\n" if ($debug);
+            my $req = HTTP::Request->new(GET => $u);
+            my $ua = LWP::UserAgent->new;
+            $ua->conn_cache(LWP::ConnCache->new());
+            $ua->timeout(15);
+            my $res = $ua->request($req);
+            if ($res->is_success) {
+                open my $image_file, ">", $thumbnail_file;
+                binmode $image_file;
+                print {$image_file} $res->content;
+                close $image_file;
+                last URL;
+            }
+            else {
+                warn $res->status_line, "\n" if ($debug);
+                next URL;
+            }
+        }
+
+    }
+    if (-e $thumbnail_file) {
+        $thumbnail->set_from_pixbuf(
+                Gtk2::Gdk::Pixbuf->new_from_file_at_scale(
+                $thumbnail_file,
+                -1,
+                120,
+                TRUE,
+            )
+        );
+        $thumbnail->set_size_request(
+            min($thumbnail->get_pixbuf->get_width,200),
+            min($thumbnail->get_pixbuf->get_height,200),
+        );
+    }
+    load_file_list();
+
+}
+
+sub update_file_list {
+
+    # runs in current working directory
+    my @existing = glob '*';
+    my @parts = @{ $current_book->{parts} };
+    my $id = 0;
+    for my $part (@parts) {
+        my $status = 'Missing';
+        my $filename = $part->{filename};
+        if (-e $filename) {
+            $status = -s $filename == $part->{filesize}
+                ? 'Completed' : 'Corrupted';
+        }
+        my $iter = $file_list->get_iter(
+            Gtk2::TreePath->new_from_indices($id++));
+        my $fetch = $file_list->get($iter, $COLUMN_FETCH);
+        my $clickable = TRUE;
+        if ($status eq 'Completed'|| $status eq 'Downloading' || $status eq 'Queued') {
+            $clickable = FALSE;
+            $fetch     = FALSE;
+        }
+        $file_list->set ($iter,
+            #this arithmetic hack is necessary because Gtk2::ListStore->set doesn't
+            # seem to like plain constants or Readonly constants until they have been
+            # used at least once
+            $COLUMN_FETCH      => $fetch,
+            $COLUMN_STATUS     => $status,
+            $COLUMN_CLICKABLE  => $clickable,
+            $COLUMN_PROGRESS   => 0,
+        );
+
+
+    } 
+
+}
+
+sub load_file_list {
+
+    # runs in current working directory
+    my @existing = glob '*';
+    my @parts = @{ $current_book->{parts} };
+    visual_warn( "Too many book parts" ) && return if (@parts > 99);
+    $file_list->clear;
+    my $id = 0;
+    for my $part (@parts) {
+        my $status = 'Missing';
+        my $filename = $part->{filename};
+        if (-e $filename) {
+            $status = $part->{filesize} eq '??'         ? 'Unknown'
+                    : -s $filename == $part->{filesize} ? 'Completed'
+                    : 'Corrupted';
+        }
+        my $iter = $file_list->append;
+        my $clickable = TRUE;
+        my $fetch = TRUE;
+        if ($status eq 'Completed'|| $status eq 'Downloading' || $status eq 'Queued') {
+            $clickable = FALSE;
+            $fetch = FALSE;
+        }
+        $file_list->set ($iter,
+            #this arithmetic hack is necessary because Gtk2::ListStore->set doesn't
+            # seem to like plain constants or Readonly constants until they have been
+            # used at least once
+            $COLUMN_ID+0       => $id++,
+            $COLUMN_FETCH      => $fetch,
+            $COLUMN_TITLE      => $filename,
+            $COLUMN_DURATION   => $part->{duration},
+            $COLUMN_SIZE       => format_size( $part->{filesize} ),
+            $COLUMN_STATUS     => $status,
+            $COLUMN_CLICKABLE  => $clickable,
+            $COLUMN_PROGRESS   => 0,
+        );
+
+
+    } 
+
+}
+
+sub format_size {
+
+    my $bytes = shift;
+    return $bytes if ($bytes !~ /^\d+$/);
+    my @labels = qw/B KiB MiB GiB TiB/;
+    my $exp = $bytes > 1024**4 ? 4
+            : $bytes > 1024**3 ? 3
+            : $bytes > 1024**2 ? 2
+            : $bytes > 1024**1 ? 1
+            : 0;
+    my $string = sprintf "%.1f %s", $bytes/1024**$exp, $labels[$exp];
+    return $string;
+
+}
+        
+
+sub open_odm {
+    my $opendialog = Gtk2::FileChooserDialog->new(
+        'Open audiobook descriptor file',
+        $mw,
+        'open',
+        'gtk-cancel' => 'cancel',
+        'gtk-ok'     => 'ok',
+    );
+    my $filename;
+    if ( $opendialog->run eq 'ok') {
+        $filename = ($opendialog->get_filename);
+        load_file($filename);
+    }
+    $opendialog->destroy;
+}
+
+sub visual_warn {
+    my $error_string = shift;
+    $error_string =~ s/\s/ /g;
+    my $blocked_string = '';
+    my $curr_line = '';
+    while ($error_string =~ /(\S+) ?/g) {
+        my $word = $1;
+        $curr_line = $curr_line ? "$curr_line $word" : $word;
+        if (length $curr_line >= 40) {
+            $blocked_string .= "$curr_line\n";
+            $curr_line = '';
+        }
+    }
+    $blocked_string .= $curr_line;
+    my $dialog = Gtk2::MessageDialog->new(
+        $mw,
+        'modal',
+        'error',
+        'ok',
+        $blocked_string,
+        undef,
+    );
+    $dialog->run;
+    $dialog->destroy;
+    return 0;
+}
+
+sub clean_quit {
+
+    if (defined $current_timeout) {
+        warn "foobar!!!\n";
+        if ($download_queue->pending > 0) {
+            $download_queue->dequeue( $download_queue->pending );
+        }
+        $download_thr->kill('TERM');
+    }
+    $download_queue->enqueue(undef);
+    $download_thr->join();
+
+    Gtk2->main_quit;
+}
+
+sub show_about {
+
+    my $dialog = Gtk2::AboutDialog->new;
+    $dialog->set_program_name($PROG_NAME);
+    $dialog->set_version($PROG_VERSION);
+    $dialog->set_copyright(chr(169) . ' 2014 Jeremy Volkening');
+    $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console and eMusic download clients');
+    $dialog->set_authors('Jeremy Volkening');
+    $dialog->set_wrap_license(TRUE);
+    $dialog->set_license(
+        "$PROG_NAME is free software: you can redistribute it and/or modify " .
+        'it under the terms of the GNU General Public License as published by ' .
+        'the Free Software Foundation, either version 3 of the License, or ' .
+        "(at your option) any later version.\n\n" .
+
+        "$PROG_NAME is distributed in the hope that it will be useful, " .
+        'but WITHOUT ANY WARRANTY; without even the implied warranty of ' .
+        'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the ' .
+        "GNU General Public License for more details.\n\n" .
+
+        'You should have received a copy of the GNU General Public License ' .
+        'along with this program.  If not, see http://www.gnu.org/licenses/.'
+    );
+    $dialog->set_logo_icon_name('gloc-tux');
+    $dialog->run;
+    $dialog->destroy;
+    return 0;
+
+}
+
+sub gen_client_id {
+
+    # The client ID consists of a string of hexidecimal digits in the form of
+    # XXXXXXXX-XXXX-XXXX-XXXXXXXXXXXXXXXXX
+    # We generate a random string in this format the first time it is
+    # requested and then read it from a config file thereafter.
+    
+    my $home_dir = File::HomeDir->my_home . '/.gloc';
+    if (-e $home_dir && ! -d $home_dir) {
+        visual_warn("Won\'t overwrite ~/.gloc");
+        clean_quit();
+    }
+    mkdir $home_dir if (! -e $home_dir);
+
+    # generate a file containing the random client ID if it doesn't exist
+    if (! -e "$home_dir/client_ID") {
+        my $id = join('', map {("A".."F",0..9)[int(rand(16))]} (1..36));
+        substr($id,$_,1) = '-' for (8,13,18);
+        open my $out, '>', "$home_dir/client_ID";
+        print {$out} $id;
+        close $out;
+    }
+
+    # read the client ID
+    open my $in, '<', "$home_dir/client_ID";
+    my $id = <$in>;
+    close $in;
+    die "FATAL ERROR: Invalid client ID\n"
+        if ($id !~ /^[0-9A-F]{8}\-[0-9A-F]{4}\-[0-9A-F]{4}\-[0-9A-F]{17}$/);
+    warn "CLID: $id\n" if ($debug);
+    return $id;
+
+}
+
+sub get_license_hash {
+
+    # This routine returns a SHA-1 hash for inclusion with the license request
+    # String is built and then properly encoded and hashed
+    my ($ClientID , $OMCv , $OSv) = @_;
+    my $id = join '|', ($ClientID, $OMCv, $OSv, 'ELOSNOC*AIDEM*EVIRDREVO');
+    return sha1_base64( encode('utf16le',$id) ) . '='; 
+
+}
+
+sub get_format {
+
+    my $hash_ref = shift;
+    my @keys = keys %{ $hash_ref };
+    my $format_ref = $hash_ref->{$keys[0]};
+    if (@keys > 1) {
+        my $dialog = Gtk2::Dialog->new_with_buttons(
+            "Choose Format",
+            $mw,
+            'modal',
+            'OK' => 1,
+            'Cancel' => 0,
+        );
+        my  $vbox = $dialog->get_content_area;
+        $vbox->pack_start(Gtk2::Label->new("This audiobook has multiple formats\n"
+        . "Please choose the format you would like to use:"),TRUE,TRUE,5);
+        my $combo_box = Gtk2::ComboBox->new_text();
+        for (@keys) { $combo_box->append_text($_) }
+        $vbox->pack_start($combo_box,FALSE,FALSE,5);
+        $combo_box->set_active(0);
+        $vbox->show_all;
+        my $response = $dialog->run;
+        if (! $response) {
+            $dialog->destroy;
+            return undef;
+        }
+        my $choice = $combo_box->get_active_text;
+        $dialog->destroy;
+        $format_ref = $hash_ref->{$choice};
+    }
+    return $format_ref;
+
+}
+
+sub get_embedded {
+
+    my $embedded = {};
+
+    my %encoded = (
+        icon_16  => $GLOC::Embed::gloc_tux_16,
+        icon_24  => $GLOC::Embed::gloc_tux_24,
+        icon_32  => $GLOC::Embed::gloc_tux_32,
+        icon_48  => $GLOC::Embed::gloc_tux_48,
+        icon_64  => $GLOC::Embed::gloc_tux_64,
+    );
+    my %unencoded = (
+        ui       => $GLOC::Embed::ui,
+    );
+
+    for (keys %encoded) {
+        $embedded->{$_} = do {
+            my $loader = Gtk2::Gdk::PixbufLoader->new();
+            $loader->write( decode_base64( $encoded{$_} ) );
+            $loader->close;
+            $loader->get_pixbuf();
+        };
+    }
+    for (keys %unencoded) {
+        $embedded->{$_} = $unencoded{$_};
+    }
+    return $embedded;
+
+}
+
+sub start_download {
+
+    my $license = $current_book->{license};
+    if (! $license || $license eq 'missing') {
+        fetch_license() || return FALSE;
+    }
+
+    $btn_download->set_label('Stop Download');
+    $file_list->foreach( \&set_bool, [$COLUMN_CLICKABLE => 0] );
+    $btn_select_all->set_sensitive(FALSE);
+    $btn_select_none->set_sensitive(FALSE);
+    my $queued = 0;
+    $file_list->foreach( sub {
+
+        my ($model,$path,$iter) = @_;
+        my $is_checked = $model->get($iter, $COLUMN_FETCH);
+        return 0 if (! $is_checked);
+        my $id = $model->get($iter, $COLUMN_ID);
+        $download_queue->enqueue( [
+            $id,
+            $current_book->{parts}->[$id]->{filename},
+            $current_book->{parts}->[$id]->{url},
+            $current_book->{parts}->[$id]->{filesize},
+            $current_book->{license},
+        ] );
+        $model->set($iter, $COLUMN_STATUS, 'Queued');
+        ++$queued;
+        return FALSE;
+
+    } );
+    if (! $queued) {
+        end_download();
+        return FALSE;
+    }
+    $current_timeout = Glib::Timeout->add(
+        500,
+        \&check_status,
+    );
+
+}
+
+sub check_status {
+
+    my @messages = ();
+    {
+        lock @status_queue;
+        while (my $msg = shift @status_queue) {
+            push @messages, $msg;
+        }
+    }
+    for (@messages) {
+        my ($id, $type, $value) = split ':', $_;
+        my $iter = $file_list->get_iter(
+            Gtk2::TreePath->new_from_indices($id));
+        if ($type eq 'SC' ) { #status change
+            $file_list->set($iter, $COLUMN_PROGRESS => 0);
+            $file_list->set($iter, $COLUMN_STATUS => $value);
+        }
+        elsif ($type eq 'PU' ) { #status change
+            $file_list->set($iter, $COLUMN_PROGRESS => $value);
+        }
+        elsif ($type eq 'DC' ) { #status change
+            $current_timeout = undef;
+            end_download();
+            return FALSE;
+        }
+        elsif ($type eq 'VW' ) { #status change
+            visual_warn($value);
+        }
+        elsif ($type eq 'SZ' ) { #size update
+            $file_list->set($iter, $COLUMN_SIZE => format_size($value));
+            $current_book->{parts}->[$id]->{filesize} = $value;
+        }
+    }
+    return TRUE;
+
+}
+
+sub fetch_license {
+
+    my $license_url = $current_book->{license_url};
+    my $media_ID    = $current_book->{media_ID};
+    return 0 if (! defined $license_url || ! defined $media_ID);
+    $license_url = URI->new($license_url);
+    my $tail = "MediaID=$media_ID&ClientID=$CLIENT_ID&OMC=$OMC_VERSION&OS=$OS_VERSION&Hash=$LIC_HASH";
+    $license_url->query(
+        $license_url->query ? $license_url->query . "&$tail" : $tail
+    );
+    warn "LICENSE: $license_url\n" if ($debug);
+    my $ua = LWP::UserAgent->new;
+    $ua->conn_cache(LWP::ConnCache->new());
+    $ua->timeout(15);
+    $ua->agent( $ODM_UA_STRING );
+    my $req = HTTP::Request->new(GET => $license_url);
+    my $res = $ua->request($req);
+    if ($res->is_success) {
+        warn "successfully retrieved license\n" if ($debug);
+        my $lic_string = $res->content;
+        $lic_string =~ s/\s/ /g;
+        write_meta( [undef,$lic_string] );
+        $current_book->{license} = $lic_string;
+        return TRUE;
+        
+    }
+    warn "error fetching license: " . $res->status_line . "\n" if ($debug);
+    visual_warn( "There was an error fetching the license for this book" );
+    return FALSE;
+}
+
+sub read_meta {
+
+    return 0 if (! -r '.gloc_meta');
+    my $string;
+    {
+        local $/ = undef;
+        open my $in, '<', '.gloc_meta';
+        $string = <$in>;
+    }
+    if ($string =~ /\Aodm_hash:(\w*)\nodm_license:([^\n]*)\Z/m) {
+        return [$1, $2];
+    }
+    else {
+        visual_warn( "incorrectly formatted meta file" ) & return 0;
+    }
+
+}
+sub write_meta {
+
+    my $ref = shift;
+    my $existing = read_meta();
+    my $new = $ref;
+    if ($existing) {
+        $new->[0] = $ref->[0] ? $ref->[0] : $existing->[0];
+        $new->[1] = $ref->[1] ? $ref->[1] : $existing->[1];
+    }
+    open my $out, '>', '.gloc_meta';
+    print {$out} "odm_hash:$new->[0]\nodm_license:$new->[1]\n";
+    close $out;
+    return 1;
+
+}
+
+sub show_license {
+
+    my %text_values = (
+        -1 => 'Unlimited',
+         0 => 'No',
+         1 => 'Yes',
+    );
+
+    my $table_license_info = Gtk2::Table->new( 6, 2, FALSE );
+    foreach (
+        #slot           label        
+        [ 'play_on_PC',  'Play On PC',           1,2,0,1 ],
+        [ 'play_count',  'Play On PCCount',      1,2,1,2 ],
+        [ 'burn_to_CD',  'Burn To CD',           1,2,2,3 ],
+        [ 'burn_count',  'Burn To CD Count',     1,2,3,4 ],
+        [ 'play_on_PM',  'Play On PM',           1,2,4,5 ],
+        [ 'SDMI_tfr',    'Transfer To SDMI',     1,2,5,6 ],
+        [ 'nonSDMI_tfr', 'Transfer To NonSDMI',  1,2,6,7 ],
+        [ 'tfr_count',   'Transfer Count',       1,2,7,8 ],
+        [ 'exp_date',    'Expiration Date',      1,2,8,9 ],
+    ) {
+        my ($slot, $text, @coords) = @$_;
+        my $lb = Gtk2::Label->new( undef );
+        $lb->set_markup( "<b>$text:</b>" );
+        $lb->set_alignment( 1, 0.5 );
+        $table_license_info->attach(
+            $lb,
+            @coords,
+            ['fill'],
+            ['expand','fill'],
+            4,
+            0
+        );
+        my $value = $text_values{ $current_book->{$slot} }
+            || $current_book->{$slot};
+        my $l2 = Gtk2::Label->new( $value );
+        $l2->set_alignment( 0, 0.5 );
+        $coords[0] += 1; 
+        $coords[1] += 1; 
+        $table_license_info->attach(
+            $l2,
+            @coords,
+            ['fill'],
+            ['expand','fill'],
+            4,
+            0
+        );
+    }
+
+    my $dialog = Gtk2::Dialog->new_with_buttons(
+        "Audiobook License Details",
+        $mw,
+        'modal',
+        'OK' => 1,
+    );
+    my  $vbox = $dialog->get_content_area;
+    $vbox->pack_start( $table_license_info, TRUE, TRUE, 0 );
+    $vbox->show_all;
+    my $response = $dialog->run;
+    $dialog->destroy;
+
+}

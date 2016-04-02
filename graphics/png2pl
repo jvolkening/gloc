@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use MIME::Base64;
+
+my @files = glob 'gloc_tux*.png';
+for (@files) {
+    open my $in, '<', $_;
+    my $string = do{ local $/ = undef; <$in> };
+    my $encoded = encode_base64( $string );
+    my $var_name = $_;
+    $var_name =~ s/\W/_/;
+    print "my \$$var_name = <<PNG;\n";
+    print $encoded;
+    print "PNG\n\n";
+}

@@ -1,0 +1,28 @@
+GLOC
+
+Version 0.5.4b
+
+* Added checks for correct domain names in URL (contentreserve.com, emusic.com)
+* Added hack to fix some thumbnail URLs in eMusic files
+* Changed default thumbnail name from 'thumb.jpg' to 'folder.jpg' for better
+  compatibility
+
+Version 0.5.3b
+
+* Added additional input checks on parsed variables used in output filename
+  (for security purposes)
+* Minor internal tweaks to allow Windows compatability
+* Minor internal tweaks to icon handling
+
+Version 0.5.2b
+
+* Fixed bug regarding case sensitivity in file extension recognition
+
+Version 0.5.1b
+
+* Modified thumbnail code to try alternative URL for eMusic cover art if
+  primary URL fails (failure is also now non-fatal)
+
+Version 0.5b
+
+* Initial public release
