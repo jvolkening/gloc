@@ -1409,8 +1409,8 @@ sub visual_warn {
         'modal',
         'error',
         'ok',
-        $blocked_string,
-        undef,
+        $blocked_string
+        #undef,
     );
     $dialog->run;
     $dialog->destroy;
@@ -1679,7 +1679,7 @@ sub fetch_license {
         return TRUE;
         
     }
-    warn "error fetching license: " . $res->{reason} . "\n" if ($debug);
+    warn "error fetching license: $res->{reason}\n$res->{content}\n" if ($debug);
     visual_warn( "There was an error fetching the license for this book" );
     return FALSE;
 }
