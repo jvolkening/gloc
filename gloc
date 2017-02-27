@@ -375,7 +375,7 @@ package main;
 use strict;
 use warnings;
 
-our $VERSION = '0.600';
+our $VERSION = '0.601';
 
 # core modules
 use Config;
@@ -398,13 +398,18 @@ use HTML::Entities;
 use HTTP::Tiny;
 use XML::Simple;
 
+# temporary - these are normally automatically pulled in by HTTP::Tiny but we
+# want to throw errors if they're missing until HTTP::Tiny::can_ssl is fully
+# supported
+use IO::Socket::SSL;
+use Net::SSLeay;
+
 # Register global "constants" (was using 'Readonly' but removed to minimize
 # non-core dependencies)
 
 my $PROG_NAME     = 'GNU/Linux OverDrive/eMusic Client';
-my $PROG_VERSION  = '0.600';
 my $ODM_UA_STRING = 'OverDrive Media Console';
-my $EMX_UA_STRING = "GLOC/$PROG_VERSION";
+my $EMX_UA_STRING = "GLOC/$VERSION";
 my $OMC_VERSION   = '3.1.0.1';
 my $OS_VERSION    = '5.1.2.2600.SP2';
 my $CLIENT_ID :shared;
@@ -429,6 +434,7 @@ GetOptions(
     'threads=i' => \$n_threads,
 );
 
+
 ## Build queue system (MUST be done before using Gtk2!!)
 my @status_queue :shared;
 $Config{useithreads} 
@@ -446,7 +452,7 @@ use Glib qw(TRUE FALSE);
 my $mw = Gtk2::Window->new( 'toplevel' );
 $mw->signal_connect( 'delete_event' => \&clean_quit );
 $mw->set_default_size( 400, 500 );
-$mw->set_title( "$PROG_NAME v$PROG_VERSION" );
+$mw->set_title( "$PROG_NAME v$VERSION" );
 
 ## Set up icon theme
 my $it = Gtk2::IconTheme->get_default();
@@ -653,6 +659,19 @@ if ($ARGV[0]) {
         load_file($ARGV[0]);
     }
 }
+
+# Check for SSL support (do this after GUI init so we can use a dialog box)
+# Currently this is disabled as stable Debian HTTP::Tiny isn't new enough, but
+# it will be enabled ( and the explicit 'use' statements above removed)
+# eventually
+
+# my ($can_ssl, $why) = HTTP::Tiny->can_ssl;
+# if (! $can_ssl) {
+    # visual_warn("GLOC requires SSL, but the following error was received when"
+      # . " checking for support:\n\n$why\n\nPlease correct this issue and try"
+      # . " again, or ask for assistance on the project support page.");
+    # exit(1);
+# }
 
 Gtk2->main;
 
@@ -1441,8 +1460,8 @@ sub show_about {
 
     my $dialog = Gtk2::AboutDialog->new;
     $dialog->set_program_name($PROG_NAME);
-    $dialog->set_version($PROG_VERSION);
-    $dialog->set_copyright(chr(169) . ' 2014-2016 Jeremy Volkening');
+    $dialog->set_version($VERSION);
+    $dialog->set_copyright(chr(169) . ' 2014-2017 Jeremy Volkening');
     $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console and eMusic download clients');
     $dialog->set_authors('Jeremy Volkening');
     $dialog->set_wrap_license(TRUE);
@@ -1679,9 +1698,38 @@ sub fetch_license {
         return TRUE;
         
     }
+
+    # this point is reached if there was an error of some sort
+    my $err;
+    eval { $err = XMLin( $res->{content} ) };
+    if (defined $err) {
+        my $code = $err->{ErrorCode};
+        my $msg  = $err->{ErrorMessage};
+        if ($code == 1003) {
+            visual_warn( "The following error was received from the server"
+            . " when requesting the license for this book: \"$msg\"."
+            . " The most common cause for this is trying to download the same"
+            . " book more than once using the same ODM file. Try to fetch a"
+            . " fresh ODM file by re-downloading the book from Overdrive, or"
+            . " seek help on the project support page." );
+        }
+        else {
+            visual_warn( "The following error was received from the server"
+            . " when requesting the license for this book:\"$msg\"."
+            . " For support, please report this message to the support page"
+            . " of the software package." );
+        }
+    }
+    else {
+        visual_warn( "There was an unknown error fetching the license for"
+          . " this book. The full contents of the error (if any) will be"
+          . " included below. For support, please report this message to the"
+          . " support page of the software package." );
+    }
+
     warn "error fetching license: $res->{reason}\n$res->{content}\n" if ($debug);
-    visual_warn( "There was an error fetching the license for this book" );
     return FALSE;
+
 }
 
 sub read_meta {
@@ -1802,11 +1850,11 @@ as any other platforms with the Perl bindings to the GTK+ libraries.
 
 =head1 AUTHOR
 
-Jeremy Volkening <jdv *at* base2bio.com>
+Jeremy Volkening <jdv@base2bio.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2015-2016 Jeremy Volkening
+Copyright 2015-2017 Jeremy Volkening
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

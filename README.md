@@ -70,22 +70,27 @@ installed separately:
 
     * Gtk2
 
+    * IO::Socket::SSL
+
     * HTML::Entities
 
     * HTTP::Tiny
 
+    * Net::SSLeay
+
     * XML::Simple
 
 These are available from the package manager of most distributions. For
-example, on Debian they can be installed with
+example, on Debian they can be installed with (on a single line):
 
     apt-get install libfile-homedir-perl libgtk2-perl libhtml-parser-perl
-    libhttp-tiny-perl libxml-simple-perl
+    libhttp-tiny-perl libxml-simple-perl libio-socket-ssl-perl
+    libnet-ssleay-perl
 
 There is also now a Makefile.PL included with the distribution for those who
-prefer. All it does is to the dependencies and copy the executable to an
-appropriate directory (wherever your copy if Perl is configured to install
-binaries from MakeMaker scripts). Install by:
+prefer. All it does is to check the dependencies and copy the executable and
+manpage to an appropriate directory (wherever your copy if Perl is configured
+to install binaries from MakeMaker scripts). Install by:
 
     perl Makefile.PL
     make
