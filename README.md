@@ -30,7 +30,8 @@ the download of legally borrowed or purchased MP3 files from the official
 OverDrive or eMusic servers to the user's computer. It can display license
 restrictions associated with a book (such as expiration date for borrowed
 books or burn-to-CD limits) but the user is responsible for abiding by any
-and all such restrictions and remove files when the license period has ended.
+and all such restrictions and removing files when the license period has
+ended.
 
 # INSTALLATION
 
