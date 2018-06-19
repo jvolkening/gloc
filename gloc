@@ -1857,8 +1857,8 @@ the Perl bindings to the GTK+ libraries.
 GLOC is not authorized by OverDrive or eMusic. However, GLOC does not make any
 attempts to circumvent license restrictions and only works with the (already
 DRM-free) MP3 versions of audiobooks. It requires the user to have a license
-for any books downloaded in the same way that the official
-(non-Linux-compatible) client does.
+for any books downloaded in the same way that the official,
+non-Linux-compatible client does.
 
 It is important to note, however, that GLOC is not an audiobook manager, and
 does not manage license restrictions. It is a simple client which facilitates
@@ -1866,7 +1866,7 @@ the download of legally borrowed or purchased MP3 files from the official
 OverDrive or eMusic servers to the user's computer. It can display license
 restrictions associated with a book (such as expiration date for borrowed
 books or burn-to-CD limits) but the user is responsible for abiding by any
-and all such restrictions and remove files when the license period has ended.
+and all such restrictions and removing files when the license period has ended.
 
 
 =head1 INSTALLATION
@@ -1912,7 +1912,7 @@ example, on Debian they can be installed with (on a single line):
 
 There is also now a Makefile.PL included with the distribution for those who
 prefer. All it does is to check the dependencies and copy the executable and
-manpage to an appropriate directory (wherever your copy if Perl is configured
+manpage to an appropriate directory (wherever your copy of Perl is configured
 to install binaries from MakeMaker scripts). Install by:
 
     perl Makefile.PL
@@ -2002,9 +2002,13 @@ Default: 3.
 
 Specify the number of download threads to use.
 
-*WARNING*: use of more than one thread  is experimental and currently
+*WARNING*: use of more than one thread is experimental and currently
 unstable. Stick to the default singled-threaded mode unless you want to
 assist with testing and debugging this feature. Default: 1.
+
+=item --debug
+
+Print various debugging messages to STDERR. Useful for developers only.
 
 =back
 
