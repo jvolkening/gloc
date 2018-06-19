@@ -375,7 +375,7 @@ package main;
 use strict;
 use warnings;
 
-our $VERSION = '0.601';
+our $VERSION = '0.602';
 
 # core modules
 use Config;
@@ -1461,7 +1461,7 @@ sub show_about {
     my $dialog = Gtk2::AboutDialog->new;
     $dialog->set_program_name($PROG_NAME);
     $dialog->set_version($VERSION);
-    $dialog->set_copyright(chr(169) . ' 2014-2017 Jeremy Volkening');
+    $dialog->set_copyright(chr(169) . ' 2014-2018 Jeremy Volkening');
     $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console and eMusic download clients');
     $dialog->set_authors('Jeremy Volkening');
     $dialog->set_wrap_license(TRUE);
@@ -2038,7 +2038,7 @@ Jeremy Volkening <jdv@base2bio.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2015-2017 Jeremy Volkening
+Copyright 2014-2018 Jeremy Volkening
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

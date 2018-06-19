@@ -1,6 +1,11 @@
 GLOC
 
-Version 0.006
+Version 0.601
+
+* Made SSL requirement explicit
+* Improved error reporting under certain conditions
+
+Version 0.600
 
 * Added multithreaded download support
 * Switched backend to HTTP::Tiny
