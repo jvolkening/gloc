@@ -80,8 +80,10 @@ or (as a last resort) submit a question to the developers.
 
 # ALTERNATIVE INSTALLATION
 
-If you have docker and docker-compose installed then you can get gloc up and 
+If you have Docker and `docker-compose` installed then you can get GLOC up and
 running quickly with [gloc_box](https://github.com/justin2004/gloc_box).
+Please make note of the potential issues with Docker and root mentioned in the
+associated README.
 
 # BASIC USAGE
 
