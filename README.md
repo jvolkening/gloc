@@ -78,6 +78,11 @@ install and set up GLOC for you). It should open the main GLOC window. If you
 get errors about missing dependencies, check the above, seek help elsewhere,
 or (as a last resort) submit a question to the developers.
 
+# ALTERNATIVE INSTALLATION
+
+If you have docker and docker-compose installed then you can get gloc up and 
+running quickly with [gloc_box](https://github.com/justin2004/gloc_box).
+
 # BASIC USAGE
 
 GLOC usage should be relatively self-explanatory, but a brief description of a
