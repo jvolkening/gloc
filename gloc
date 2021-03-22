@@ -455,7 +455,6 @@ $mw->set_default_size( 400, 500 );
 $mw->set_title( "$PROG_NAME v$VERSION" );
 
 ## Set up icon theme
-my $it = Gtk3::IconTheme::get_default();
 for (16,24,32,48,64) {
     Gtk3::IconTheme::add_builtin_icon( 'gloc-tux', $_, $embedded->{"icon_$_"} );
 }
@@ -1582,7 +1581,8 @@ sub get_embedded {
     for (keys %encoded) {
         $embedded->{$_} = do {
             my $loader = Gtk3::Gdk::PixbufLoader->new();
-            $loader->write( decode_base64( $encoded{$_} ) );
+            my $img_data = decode_base64($encoded{$_});
+            $loader->write( [unpack 'C*', $img_data] );
             $loader->close;
             $loader->get_pixbuf();
         };
