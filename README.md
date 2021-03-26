@@ -49,7 +49,7 @@ version 5.9 or later, with the exception of the following which may need to be
 installed separately:
 
 - File::HomeDir
-- Gtk2
+- Gtk3
 - IO::Socket::SSL
 - HTML::Entities
 - HTTP::Tiny

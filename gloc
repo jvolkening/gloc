@@ -435,7 +435,7 @@ GetOptions(
 );
 
 
-## Build queue system (MUST be done before using Gtk2!!)
+## Build queue system (MUST be done before using Gtk3!!)
 my @status_queue :shared;
 $Config{useithreads} 
     or die "This program requires threaded perl";
@@ -445,25 +445,24 @@ for (1..$n_threads) {
     push @workers, threads->create( \&download_file );
 }
 
-use Gtk2 qw/-init -threads-init/;
+use Gtk3 qw/-init/;
 use Glib qw(TRUE FALSE);
 
 ## Build main GUI
-my $mw = Gtk2::Window->new( 'toplevel' );
+my $mw = Gtk3::Window->new( 'toplevel' );
 $mw->signal_connect( 'delete_event' => \&clean_quit );
 $mw->set_default_size( 400, 500 );
 $mw->set_title( "$PROG_NAME v$VERSION" );
 
 ## Set up icon theme
-my $it = Gtk2::IconTheme->get_default();
 for (16,24,32,48,64) {
-    $it->add_builtin_icon( 'gloc-tux', $_, $embedded->{"icon_$_"} );
+    Gtk3::IconTheme::add_builtin_icon( 'gloc-tux', $_, $embedded->{"icon_$_"} );
 }
 
-$mw->set_default_icon_name( 'gloc-tux' );
+Gtk3::Window::set_default_icon_name( 'gloc-tux' );
 
 # Main layout box
-my $vbox_main = Gtk2::VBox->new( FALSE, 0 );
+my $vbox_main = Gtk3::VBox->new( FALSE, 0 );
 
 # Define menu structure
 my @menu_actions = (
@@ -476,19 +475,19 @@ my @menu_actions = (
     [ "Quit",    'gtk-quit',  "_Quit",        "<control>Q", "Quit",    \&clean_quit   ],
     [ "About",   'gtk-about', "_About",        undef,       "About",   \&show_about   ],
 );
-my $actions = Gtk2::ActionGroup->new( "Actions" );
+my $actions = Gtk3::ActionGroup->new( "Actions" );
 $actions->add_actions( \@menu_actions, undef );
-my $ui = Gtk2::UIManager->new;
+my $ui = Gtk3::UIManager->new;
 $ui->insert_action_group( $actions, 0 );
 $mw->add_accel_group( $ui->get_accel_group );
 $ui->add_ui_from_string( $embedded->{ui} );
 $vbox_main->pack_start( $ui->get_widget( "/MenuBar" ), FALSE, FALSE, 0 );
 
 # Create book info pane
-my $table_book_info = Gtk2::Table->new( 6, 2, FALSE );
-my $hbox_book_info = Gtk2::HBox->new( FALSE, 0 );
-my $thumbnail = Gtk2::Image->new;
-my $frame_thumbnail = Gtk2::Frame->new;
+my $table_book_info = Gtk3::Table->new( 6, 2, FALSE );
+my $hbox_book_info = Gtk3::HBox->new( FALSE, 0 );
+my $thumbnail = Gtk3::Image->new;
+my $frame_thumbnail = Gtk3::Frame->new;
 $frame_thumbnail->set_shadow_type( 'in' );
 $frame_thumbnail->add( $thumbnail );
 $thumbnail->set_size_request( -1, 120 );
@@ -510,7 +509,7 @@ foreach (
     ['Expires'   => 1,2,5,6],
 ) {
     my ($text,@coords) = @$_;
-    my $lb = Gtk2::Label->new( undef );
+    my $lb = Gtk3::Label->new( undef );
     $lb->set_markup( "<b>$text:</b>" );
     $lb->set_alignment( 1, 0.5 );
     $table_book_info->attach(
@@ -521,7 +520,7 @@ foreach (
         4,
         0
     );
-    my $l = Gtk2::Label->new( undef );
+    my $l = Gtk3::Label->new( undef );
     $l->set_alignment( 0, 0.5 );
     $coords[0] += 1; 
     $coords[1] += 1; 
@@ -546,11 +545,11 @@ my $COLUMN_SIZE        = 4;
 my $COLUMN_STATUS      = 5;
 my $COLUMN_CLICKABLE   = 6;
 my $COLUMN_PROGRESS    = 7;
-my $sw_file_list = Gtk2::ScrolledWindow->new( undef, undef );
+my $sw_file_list = Gtk3::ScrolledWindow->new( undef, undef );
 $sw_file_list->set_shadow_type( 'in' );
 $sw_file_list->set_policy( 'never', 'always' );
 	
-my $file_list = Gtk2::ListStore->new(
+my $file_list = Gtk3::ListStore->new(
     'Glib::Int',
     'Glib::Boolean',
     'Glib::String',
@@ -562,13 +561,13 @@ my $file_list = Gtk2::ListStore->new(
 );
         
 
-my $tview = Gtk2::TreeView->new($file_list);
+my $tview = Gtk3::TreeView->new($file_list);
 
 #---------------------------------------------------------------------------#
 
-my $renderer = Gtk2::CellRendererToggle->new;
+my $renderer = Gtk3::CellRendererToggle->new;
 $renderer->signal_connect( toggled => \&toggle_bool, $file_list );
-my $column = Gtk2::TreeViewColumn->new_with_attributes(
+my $column = Gtk3::TreeViewColumn->new_with_attributes(
     "Fetch?",
     $renderer,
     active      => $COLUMN_FETCH,
@@ -581,8 +580,8 @@ $tview->append_column( $column );
 
 #---------------------------------------------------------------------------#
 
-$renderer = Gtk2::CellRendererText->new;
-$column = Gtk2::TreeViewColumn->new_with_attributes(
+$renderer = Gtk3::CellRendererText->new;
+$column = Gtk3::TreeViewColumn->new_with_attributes(
     "File name",
     $renderer,
     text => $COLUMN_TITLE
@@ -591,10 +590,10 @@ $tview->append_column( $column );
 
 #---------------------------------------------------------------------------#
 
-$renderer = Gtk2::CellRendererText->new;
+$renderer = Gtk3::CellRendererText->new;
 $renderer->set( 'xalign' => 0.5 );
 $renderer->set( 'xpad'   => 10  );
-$column = Gtk2::TreeViewColumn->new_with_attributes(
+$column = Gtk3::TreeViewColumn->new_with_attributes(
     "Duration",
     $renderer,
     text => $COLUMN_DURATION,
@@ -604,10 +603,10 @@ $tview->append_column( $column );
 
 #---------------------------------------------------------------------------#
 
-$renderer = Gtk2::CellRendererText->new;
+$renderer = Gtk3::CellRendererText->new;
 $renderer->set( 'xalign'=> 0.5 );
 $renderer->set( 'xpad'  => 10  );
-$column = Gtk2::TreeViewColumn->new_with_attributes(
+$column = Gtk3::TreeViewColumn->new_with_attributes(
     "File size",
     $renderer,
     text => $COLUMN_SIZE,
@@ -617,8 +616,8 @@ $tview->append_column( $column );
 
 #---------------------------------------------------------------------------#
 
-$renderer = Gtk2::CellRendererProgress->new;
-$column = Gtk2::TreeViewColumn->new_with_attributes(
+$renderer = Gtk3::CellRendererProgress->new;
+$column = Gtk3::TreeViewColumn->new_with_attributes(
     "Status",
     $renderer,
     text  => $COLUMN_STATUS,
@@ -632,10 +631,10 @@ $tview->append_column( $column );
 
 $sw_file_list->add( $tview );
 
-my $hbox_controls   = Gtk2::HBox->new( FALSE, 0 );
-my $btn_select_all  = Gtk2::Button->new_with_label( 'Select All'     );
-my $btn_select_none = Gtk2::Button->new_with_label( 'Select None'    );
-my $btn_download    = Gtk2::Button->new_with_label( 'Start Download' );
+my $hbox_controls   = Gtk3::HBox->new( FALSE, 0 );
+my $btn_select_all  = Gtk3::Button->new_with_label( 'Select All'     );
+my $btn_select_none = Gtk3::Button->new_with_label( 'Select None'    );
+my $btn_download    = Gtk3::Button->new_with_label( 'Start Download' );
 $btn_download->signal_connect( 'released' => \&toggle_download );
 $btn_select_all->signal_connect(
     'released' => sub {$file_list->foreach( \&set_bool, [$COLUMN_FETCH => 1] )} );
@@ -648,7 +647,7 @@ $hbox_controls->pack_end(   $btn_download,    FALSE, FALSE, 0 );
 $vbox_main->pack_start( $hbox_book_info,FALSE, FALSE, 0 );
 $vbox_main->pack_start( $sw_file_list,  TRUE,  TRUE,  0 );
 $vbox_main->pack_start( $hbox_controls, FALSE, FALSE, 0 );
-my $statusbar = Gtk2::Statusbar->new;
+my $statusbar = Gtk3::Statusbar->new;
 $vbox_main->pack_end( $statusbar, FALSE, FALSE, 0 );
 $mw->add( $vbox_main );
 $mw->show_all;
@@ -673,7 +672,7 @@ if ($ARGV[0]) {
     # exit(1);
 # }
 
-Gtk2->main;
+Gtk3->main;
 
 
 #############################################################################
@@ -886,7 +885,7 @@ sub set_bool {
 sub toggle_bool {
 
   my ($cell, $path_str, $model) = @_;
-  my $path = Gtk2::TreePath->new( $path_str );
+  my $path = Gtk3::TreePath->new( $path_str );
   my $iter = $model->get_iter( $path );
   my ($fixed) = $model->get( $iter, $COLUMN_FETCH );
   $fixed ^= 1;
@@ -1189,12 +1188,12 @@ sub load_file {
         $book->{license} = $license if ($download_dir);
     }
     if (! $download_dir) {
-        my $dialog = Gtk2::FileChooserDialog->new(
+        my $dialog = Gtk3::FileChooserDialog->new(
             'Please select parent directory',
             $mw,
             'select-folder',
-            'OK' => 'ok',
-            'Cancel'=>'cancel',
+            'gtk-cancel'=>'cancel',
+            'gtk-ok' => 'ok',
         );
         $dialog->set_current_folder($path);
         if ($dialog->run eq 'cancel') {
@@ -1283,7 +1282,7 @@ sub load_file {
     }
     if (-e $thumbnail_file) {
         $thumbnail->set_from_pixbuf(
-                Gtk2::Gdk::Pixbuf->new_from_file_at_scale(
+                Gtk3::Gdk::Pixbuf->new_from_file_at_scale(
                 $thumbnail_file,
                 -1,
                 120,
@@ -1313,7 +1312,7 @@ sub update_file_list {
                 ? 'Completed' : 'Corrupted';
         }
         my $iter = $file_list->get_iter(
-            Gtk2::TreePath->new_from_indices($id++));
+            Gtk3::TreePath->new_from_indices($id++));
         my $fetch = $file_list->get($iter, $COLUMN_FETCH);
         my $clickable = TRUE;
         if ($status eq 'Completed'|| $status eq 'Downloading' || $status eq 'Queued') {
@@ -1321,7 +1320,7 @@ sub update_file_list {
             $fetch     = FALSE;
         }
         $file_list->set ($iter,
-            #this arithmetic hack is necessary because Gtk2::ListStore->set doesn't
+            #this arithmetic hack is necessary because Gtk3::ListStore->set doesn't
             # seem to like plain constants or Readonly constants until they have been
             # used at least once
             $COLUMN_FETCH      => $fetch,
@@ -1359,7 +1358,7 @@ sub load_file_list {
             $fetch = FALSE;
         }
         $file_list->set ($iter,
-            #this arithmetic hack is necessary because Gtk2::ListStore->set doesn't
+            #this arithmetic hack is necessary because Gtk3::ListStore->set doesn't
             # seem to like plain constants or Readonly constants until they have been
             # used at least once
             $COLUMN_ID+0       => $id++,
@@ -1394,7 +1393,7 @@ sub format_size {
         
 
 sub open_odm {
-    my $opendialog = Gtk2::FileChooserDialog->new(
+    my $opendialog = Gtk3::FileChooserDialog->new(
         'Open audiobook descriptor file',
         $mw,
         'open',
@@ -1423,7 +1422,7 @@ sub visual_warn {
         }
     }
     $blocked_string .= $curr_line;
-    my $dialog = Gtk2::MessageDialog->new(
+    my $dialog = Gtk3::MessageDialog->new(
         $mw,
         'modal',
         'error',
@@ -1437,7 +1436,7 @@ sub visual_warn {
 }
 
 sub clean_quit {
-    Gtk2->main_quit;
+    Gtk3->main_quit;
 
     if (defined $current_timeout) {
         if ($download_queue->pending > 0) {
@@ -1458,7 +1457,7 @@ sub clean_quit {
 
 sub show_about {
 
-    my $dialog = Gtk2::AboutDialog->new;
+    my $dialog = Gtk3::AboutDialog->new;
     $dialog->set_program_name($PROG_NAME);
     $dialog->set_version($VERSION);
     $dialog->set_copyright(chr(169) . ' 2014-2018 Jeremy Volkening');
@@ -1536,7 +1535,7 @@ sub get_format {
     my @keys = keys %{ $hash_ref };
     my $format_ref = $hash_ref->{$keys[0]};
     if (@keys > 1) {
-        my $dialog = Gtk2::Dialog->new_with_buttons(
+        my $dialog = Gtk3::Dialog->new_with_buttons(
             "Choose Format",
             $mw,
             'modal',
@@ -1544,9 +1543,9 @@ sub get_format {
             'Cancel' => 0,
         );
         my  $vbox = $dialog->get_content_area;
-        $vbox->pack_start(Gtk2::Label->new("This audiobook has multiple formats\n"
+        $vbox->pack_start(Gtk3::Label->new("This audiobook has multiple formats\n"
         . "Please choose the format you would like to use:"),TRUE,TRUE,5);
-        my $combo_box = Gtk2::ComboBox->new_text();
+        my $combo_box = Gtk3::ComboBox->new_text();
         for (@keys) { $combo_box->append_text($_) }
         $vbox->pack_start($combo_box,FALSE,FALSE,5);
         $combo_box->set_active(0);
@@ -1581,8 +1580,9 @@ sub get_embedded {
 
     for (keys %encoded) {
         $embedded->{$_} = do {
-            my $loader = Gtk2::Gdk::PixbufLoader->new();
-            $loader->write( decode_base64( $encoded{$_} ) );
+            my $loader = Gtk3::Gdk::PixbufLoader->new();
+            my $img_data = decode_base64($encoded{$_});
+            $loader->write( [unpack 'C*', $img_data] );
             $loader->close;
             $loader->get_pixbuf();
         };
@@ -1647,7 +1647,7 @@ sub check_status {
     for (@messages) {
         my ($id, $type, $value) = split ':', $_;
         my $iter = $file_list->get_iter(
-            Gtk2::TreePath->new_from_indices($id));
+            Gtk3::TreePath->new_from_indices($id));
         if ($type eq 'SC' ) { #status change
             $file_list->set($iter, $COLUMN_PROGRESS => 0);
             $file_list->set($iter, $COLUMN_STATUS => $value);
@@ -1773,7 +1773,7 @@ sub show_license {
          1 => 'Yes',
     );
 
-    my $table_license_info = Gtk2::Table->new( 6, 2, FALSE );
+    my $table_license_info = Gtk3::Table->new( 6, 2, FALSE );
     foreach (
         #slot           label        
         [ 'play_on_PC',  'Play On PC',           1,2,0,1 ],
@@ -1787,7 +1787,7 @@ sub show_license {
         [ 'exp_date',    'Expiration Date',      1,2,8,9 ],
     ) {
         my ($slot, $text, @coords) = @$_;
-        my $lb = Gtk2::Label->new( undef );
+        my $lb = Gtk3::Label->new( undef );
         $lb->set_markup( "<b>$text:</b>" );
         $lb->set_alignment( 1, 0.5 );
         $table_license_info->attach(
@@ -1800,7 +1800,7 @@ sub show_license {
         );
         my $value = $text_values{ $current_book->{$slot} }
             || $current_book->{$slot};
-        my $l2 = Gtk2::Label->new( $value );
+        my $l2 = Gtk3::Label->new( $value );
         $l2->set_alignment( 0, 0.5 );
         $coords[0] += 1; 
         $coords[1] += 1; 
@@ -1814,7 +1814,7 @@ sub show_license {
         );
     }
 
-    my $dialog = Gtk2::Dialog->new_with_buttons(
+    my $dialog = Gtk3::Dialog->new_with_buttons(
         "Audiobook License Details",
         $mw,
         'modal',
@@ -1889,7 +1889,7 @@ installed separately:
 
 =item * File::HomeDir
 
-=item * Gtk2
+=item * Gtk3
 
 =item * IO::Socket::SSL
 

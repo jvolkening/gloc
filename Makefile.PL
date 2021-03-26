@@ -38,7 +38,7 @@ WriteMakefile(
 
         # non-core
         'File::HomeDir'   => 0,
-        'Gtk2'            => 0,
+        'Gtk3'            => 0,
         'HTML::Entities'  => 0,
         'HTTP::Tiny'      => 0,
         'IO::Socket::SSL' => 1.56,
