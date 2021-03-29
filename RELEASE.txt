@@ -1,5 +1,9 @@
 GLOC
 
+Version 1.000
+
+* Port to Gtk3
+
 Version 0.601
 
 * Made SSL requirement explicit

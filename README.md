@@ -185,11 +185,15 @@ project homepage ([https://github.com/jvolkening/gloc](https://github.com/jvolke
 
 # AUTHOR
 
-Jeremy Volkening <jdv@base2bio.com>
+Jeremy Volkening <jdvolkening@gmail.com>
+
+# CONTRIBUTORS
+
+Hubert Chathi <@uhoreg> (port to Gtk3)
 
 # COPYRIGHT AND LICENSE
 
-Copyright 2014-2018 Jeremy Volkening
+Copyright 2014-2021 Jeremy Volkening
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
