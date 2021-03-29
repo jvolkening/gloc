@@ -1460,9 +1460,9 @@ sub show_about {
     my $dialog = Gtk3::AboutDialog->new;
     $dialog->set_program_name($PROG_NAME);
     $dialog->set_version($VERSION);
-    $dialog->set_copyright(chr(169) . ' 2014-2018 Jeremy Volkening');
+    $dialog->set_copyright(chr(169) . ' 2014-2021 Jeremy Volkening');
     $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console and eMusic download clients');
-    $dialog->set_authors('Jeremy Volkening');
+    $dialog->set_authors(['Jeremy Volkening']);
     $dialog->set_wrap_license(TRUE);
     $dialog->set_license(
         "$PROG_NAME is free software: you can redistribute it and/or modify " .
