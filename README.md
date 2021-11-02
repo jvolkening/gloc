@@ -42,7 +42,7 @@ permissions and environment variables will not be covered here.
 
 Some users, however, may need to install a few prerequisites before GLOC will
 run. The primary dependency, besides a reasonably modern version of perl, is
-the GTK+ (v.2) graphics library. Users of KDE or other non-GTK desktops may
+the GTK+ (v.3) graphics library. Users of KDE or other non-GTK desktops may
 need to install this separately (a rather heavy dependency, but there you have
 it). Beyond that, most of the modules used are part of the perl core as of
 version 5.9 or later, with the exception of the following which may need to be
@@ -59,7 +59,7 @@ installed separately:
 These are available from the package manager of most distributions. For
 example, on Debian they can be installed with (on a single line):
 
-    apt-get install libfile-homedir-perl libgtk2-perl libhtml-parser-perl
+    apt-get install libfile-homedir-perl libgtk3-perl libhtml-parser-perl
     libhttp-tiny-perl libxml-simple-perl libio-socket-ssl-perl
     libnet-ssleay-perl
 

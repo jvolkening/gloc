@@ -1889,7 +1889,7 @@ permissions and environment variables will not be covered here.
 
 Some users, however, may need to install a few prerequisites before GLOC will
 run. The primary dependency, besides a reasonably modern version of perl, is
-the GTK+ (v.2) graphics library. Users of KDE or other non-GTK desktops may
+the GTK+ (v.3) graphics library. Users of KDE or other non-GTK desktops may
 need to install this separately (a rather heavy dependency, but there you have
 it). Beyond that, most of the modules used are part of the perl core as of
 version 5.9 or later, with the exception of the following which may need to be
@@ -1916,7 +1916,7 @@ installed separately:
 These are available from the package manager of most distributions. For
 example, on Debian they can be installed with (on a single line):
 
-    apt-get install libfile-homedir-perl libgtk2-perl libhtml-parser-perl
+    apt-get install libfile-homedir-perl libgtk3-perl libhtml-parser-perl
     libhttp-tiny-perl libxml-simple-perl libio-socket-ssl-perl
     libnet-ssleay-perl
 
@@ -1935,6 +1935,12 @@ install and set up GLOC for you). It should open the main GLOC window. If you
 get errors about missing dependencies, check the above, seek help elsewhere,
 or (as a last resort) submit a question to the developers.
 
+=head1 ALTERNATIVE INSTALLATION
+
+If you have Docker and C<docker-compose> installed then you can get GLOC up and
+running quickly with L<gloc_box|https://github.com/justin2004/gloc_box>.
+Please make note of the potential issues with Docker and root mentioned in the
+associated README.
 
 =head1 BASIC USAGE
 
@@ -2043,12 +2049,15 @@ project homepage (L<https://github.com/jvolkening/gloc>).
 
 =head1 AUTHOR
 
-Jeremy Volkening <jdv@base2bio.com>
+Jeremy Volkening <jdvolkening@gmail.com>
 
+=head1 CONTRIBUTORS
+
+Hubert Chathi <@uhoreg> (port to Gtk3)
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2014-2018 Jeremy Volkening
+Copyright 2014-2021 Jeremy Volkening
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
