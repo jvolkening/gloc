@@ -1,5 +1,9 @@
 GLOC
 
+Version 1.001
+
+* Fix handling of potentially missing metadata
+
 Version 1.000
 
 * Port to Gtk3
