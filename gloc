@@ -1126,6 +1126,16 @@ sub parse_odm {
         return;
     }
 
+    # gracefully handle any expected but potentially missing metadata fields
+    for my $tag (qw/
+        title
+        author
+        narrator
+        publisher
+    /) {
+        $book->{$tag} //= 'Unknown/missing';
+    }
+
     return $book;
 
 }
