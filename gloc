@@ -375,7 +375,7 @@ package main;
 use strict;
 use warnings;
 
-our $VERSION = '1.001';
+our $VERSION = '1.002';
 
 # core modules
 use Config;
@@ -1005,17 +1005,27 @@ sub parse_odm {
     # read the .odm XML file into a hash and the CDATA metadata from
     # the file into another hash
     my $xml = new XML::Simple;
-    my $data = $xml->XMLin( $file_contents,
-        ForceArray => ['Format','Protocol','Part','Creator'],
-        GroupTags  => {Formats   => 'Format',
-                       Protocols => 'Protocol',
-                       Parts     => 'Part',
-                       Creators  => 'Creator',
-                       },
-        KeyAttr    => {Format    => 'name',
-                       Protocol  => 'method',
-                       },
-    );
+    my $data = eval {
+        $xml->XMLin( $file_contents,
+            ForceArray => ['Format','Protocol','Part','Creator'],
+            GroupTags  => {Formats   => 'Format',
+                        Protocols => 'Protocol',
+                        Parts     => 'Part',
+                        Creators  => 'Creator',
+                        },
+            KeyAttr    => {Format    => 'name',
+                        Protocol  => 'method',
+                        },
+        );
+    };
+    if ($@) {
+        visual_warn(
+            "There was an error parsing the download file. Please"
+            . " report the following error along with the ODM contents,"
+            . " if possible, to the GLOC developers:\n\n$@\n"
+        );
+        return 0;
+    }
 
     # Metadata is sometimes CDATA and sometimes not !!!
     my $meta;
@@ -1025,11 +1035,22 @@ sub parse_odm {
     else {
 
         my $content = $data->{'content'};
-        $content =~ s/&/&amp;/;
-        $meta = $xml->XMLin( $content,
-            ForceArray => ['Creator'],
-            GroupTags  => {'Creators' => 'Creator'},
-        );
+        # OverDrive sometimes uses unescaped ampersands in the metadata block
+        $content =~ s/&/&amp;/g;
+        $meta = eval {
+            $xml->XMLin( $content,
+                ForceArray => ['Creator'],
+                GroupTags  => {'Creators' => 'Creator'},
+            );
+        };
+        if ($@) {
+            visual_warn(
+                "There was an error parsing the download file. Please"
+                . " report the following error along with the ODM contents,"
+                . " if possible, to the GLOC developers:\n\n$@\n"
+            );
+            return 0;
+        }
     }
 
     $book->{type} = $meta->{'ContentType'};
