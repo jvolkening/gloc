@@ -375,7 +375,7 @@ package main;
 use strict;
 use warnings;
 
-our $VERSION = '1.002';
+our $VERSION = '2.000';
 
 # core modules
 use Config;
@@ -407,15 +407,13 @@ use Net::SSLeay;
 # Register global "constants" (was using 'Readonly' but removed to minimize
 # non-core dependencies)
 
-my $PROG_NAME     = 'GNU/Linux OverDrive/eMusic Client';
+my $PROG_NAME     = 'GNU/Linux OverDrive Client';
 my $ODM_UA_STRING = 'OverDrive Media Console';
-my $EMX_UA_STRING = "GLOC/$VERSION";
 my $OMC_VERSION   = '3.1.0.1';
 my $OS_VERSION    = '5.1.2.2600.SP2';
 my $CLIENT_ID :shared;
 my $LIC_HASH;
 my $OVERDRIVE_DOMAIN = '(?:contentreserve.com|overdrive.com)';
-my $EMUSIC_DOMAIN    = 'emusic.com';
 
 # misc globals
 my $retries = 3;
@@ -694,20 +692,14 @@ sub download_file {
         }
 
         # initialize user agent
-        my $type;
-        {
-            lock $current_type;
-            $type = $current_type;
-        }
-        my $ua_string = $current_type eq 'odm' ? $ODM_UA_STRING
-                        : $EMX_UA_STRING;
+        my $ua_string = $ODM_UA_STRING;
         my $ua = HTTP::Tiny->new(
             keep_alive => 1,
             agent => $ua_string,
             timeout => 60,
         );
 
-        # fetch file size if necessary (currently only eMusic files)
+        # fetch file size if necessary
         if ($filesize eq '??') {
             for (1..$retries) {
                 my $response = $ua->head($url);
@@ -893,99 +885,6 @@ sub toggle_bool {
 
 }
 
-sub parse_emx {
-
-    my $filename = shift;
-    my $book = {'source' => 'emx'};
-
-    # read the .emx XML file into a hash
-    my $xml = new XML::Simple;
-    my $data = $xml->XMLin( $filename,
-        ForceArray => ['TRACK','ARTIST','Part','Creator'],
-        GroupTags  => {TRACKLIST   => 'TRACK',
-                       },
-    );
-
-    #EMX files have only track info, so we get book info from first track
-    my $first_track = $data->{TRACKLIST}->[0];
-    $book->{type} = $first_track->{MIMETYPE};
-    if ($book->{type} ne 'audio/mpeg') {
-        visual_warn( "This does not appear to be an Emusic MP3 book" );
-        return 0;
-    }
-
-    $book->{media_ID}    = $first_track->{ALBUMID};
-    $book->{play_on_PC}  = 'NA';
-    $book->{play_count}  = 'NA';
-    $book->{burn_to_CD}  = 'NA';
-    $book->{burn_count}  = 'NA';
-    $book->{play_on_PM}  = 'NA';
-    $book->{SDMI_tfr}    = 'NA';
-    $book->{nonSDMI_tfr} = 'NA';
-    $book->{tfr_count}   = 'NA';
-    $book->{exp_date}    = 'NA';
-
-    my $title = decode_entities( $first_track->{ALBUM} );
-    $book->{title}         = $title;
-    $title =~ s/\W/_/g;
-    $book->{file_base}     = $title;
-    $book->{publisher}     = 'Unknown'; # not listed in EMX
-
-    # for added security, check that URL resides on proper domain
-    ($book->{thumbnail_url})  = ( $first_track->{ALBUMARTLARGE}
-        =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$EMUSIC_DOMAIN\/.*)\Z/i );
-    ($book->{thumbnail_url2})  = ( $first_track->{ALBUMART}
-        =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$EMUSIC_DOMAIN\/.*)\Z/i );
-
-    # Handle multiple authors, etc by appending 'et al' to first
-    my %multiples;
-    CREATOR:
-    $book->{author} = decode_entities( $first_track->{ARTIST}->[0] );
-    $book->{author}   .= ' et al' if (defined $first_track->{ARTIST}->[1]);
-    $book->{narrator} = 'Unknown'; # not listed in EMX
-
-    $book->{num_parts}     = $first_track->{TRACKCOUNT};
-
-    #number of parts used in 'open()', so check here for security purposes
-    die "bad track count" if ($book->{num_parts} !~ /\A\d+\z/);
-        
-    my $s = 0; # total length
-    my @parts;
-    for (@{ $data->{TRACKLIST} }) {
-        my $part = {};
-
-        # for added security, check that URL resides on proper domain
-        my ($url)  = ( $_->{TRACKURL}
-            =~ /\A(https?\:\/\/(?:[\w\-\.]*\.)?$EMUSIC_DOMAIN\/.*)\Z/i );
-        $part->{url} = $url;
-
-        $part->{filesize} = '??';
-        $part->{number} = $_->{TRACKNUM};
-
-        #track number used in 'open()', so check here for security purposes
-        die "bad track number" if ($part->{number} !~ /\A\d+\z/);
-
-        $part->{filename} =  sprintf "%s_Part_%02d_of_%02d.mp3",
-            $book->{file_base}, $part->{number}, $book->{num_parts};
-        $part->{duration} = int($_->{DURATION}/60) . ':' .  sprintf('%02s',$_->{DURATION}%60);
-        $s += $_->{DURATION};
-        push @parts, $part;
-    }
-    $book->{parts}    = [sort {$a->{number} <=> $b->{number}} @parts];
-    $book->{duration} = int($s/3600) . ' hrs ' . int(($s+30)%3600/60) . ' min';
-    
-    if (@{ $book->{parts} } != $first_track->{TRACKCOUNT}) { #internal check
-        my $counted = @{ $book->{parts} };
-        my $reported = $first_track->{TRACKCOUNT};
-        visual_warn( "EMX format error: part count mismatch ($counted v $reported)" );
-        return 0;
-    }
-
-    $book->{license} = 'NA';
-
-    return $book;
-
-}
 sub parse_odm {
 
     my $filename = shift;
@@ -1051,6 +950,7 @@ sub parse_odm {
             );
             return 0;
         }
+
     }
 
     $book->{type} = $meta->{'ContentType'};
@@ -1168,27 +1068,25 @@ sub load_file {
         visual_warn( "Couldn't open file for reading" );
         return;
     }
-    if ($filename !~ /\.(?:emx|odm)$/ig) {
+    if ($filename !~ /\.odm$/ig) {
         visual_warn( "Unrecognized file extension" );
         return;
     }
     my $book;
-    if ($filename =~ /\.odm$/i) {
 
-        # for OverDrive books, we need to calculate Client ID and License Hash
-        $CLIENT_ID = gen_client_id();
-        warn "set CL to $CLIENT_ID\n" if ($debug);
-        if ($CLIENT_ID) {
-            $LIC_HASH  = get_license_hash(
-                $CLIENT_ID,
-                $OMC_VERSION,
-                $OS_VERSION,
-            );
-            $book = parse_odm( $filename );
-        }
+    # for OverDrive books, we need to calculate Client ID and License Hash
+    $CLIENT_ID = gen_client_id();
+    warn "set CL to $CLIENT_ID\n" if ($debug);
+    if ($CLIENT_ID) {
+        $LIC_HASH  = get_license_hash(
+            $CLIENT_ID,
+            $OMC_VERSION,
+            $OS_VERSION,
+        );
+        $book = parse_odm( $filename );
     }
-    $book = parse_emx( $filename) if ($filename =~ /\.emx$/i);
     return if (! $book);
+
     $current_book = $book;
     $current_type = $book->{source};
     my ($file,$path) = fileparse($filename);
@@ -1275,19 +1173,11 @@ sub load_file {
     my $thumbnail_file = -e 'thumb.jpg' ? 'thumb.jpg' : 'folder.jpg';
     warn "thumb: $thumbnail_file\n" if ($debug);
     if (! -e $thumbnail_file) {
+
         my @urls;
         push @urls, $book->{thumbnail_url} if (defined $book->{thumbnail_url});
-        
-        # this is a hack because some (older?) eMusic .emx files have bad
-        # thumbnail URLs. Will probably change in the future.
-        if ($current_type eq 'emx' && defined $book->{thumbnail_url}) {
-            my $url = $book->{thumbnail_url};
-            $url =~ s/images(?=\.emusic\.com)/cf-images/;
-            $url =~ s/images\/book\/0\//images\//;
-            push @urls, $url;
-        }
-
         push @urls, $book->{thumbnail_url2} if (defined $book->{thumbnail_url2});
+
         URL:
         for (@urls) {
             my $u = $_;
@@ -1491,8 +1381,8 @@ sub show_about {
     my $dialog = Gtk3::AboutDialog->new;
     $dialog->set_program_name($PROG_NAME);
     $dialog->set_version($VERSION);
-    $dialog->set_copyright(chr(169) . ' 2014-2021 Jeremy Volkening');
-    $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console and eMusic download clients');
+    $dialog->set_copyright(chr(169) . ' 2014-2023 Jeremy Volkening');
+    $dialog->set_comments('GLOC is a native Linux substitute for the Overdrive Media Console download client');
     $dialog->set_authors(['Jeremy Volkening']);
     $dialog->set_wrap_license(TRUE);
     $dialog->set_license(
@@ -1864,7 +1754,7 @@ __END__
 
 =head1 NAME
 
-gloc - A GNU/Linux Overdrive/EMusic download client
+gloc - A GNU/Linux Overdrive download client
 
 
 =head1 SYNOPSIS
@@ -1874,18 +1764,17 @@ gloc - A GNU/Linux Overdrive/EMusic download client
 
 =head1 DESCRIPTION
 
-GLOC is a download manager for the OverDrive and eMusic MP3 audiobook
-collections written in Perl+GTK. Lack of a native Linux client for downloading
-OverDrive audiobooks from libraries and retailers has left Linux users in the
-cold, and this program was written to fill that need.  eMusic compatibility
-was added later. It is developed and tested on Debian GNU/Linux but is
-expected to run on most flavors of Linux as well as any other platforms with
-the Perl bindings to the GTK+ libraries.
+GLOC is a download manager for the OverDrive MP3 audiobook collection written
+in Perl+GTK. Lack of a native Linux client for downloading OverDrive
+audiobooks from libraries and retailers has left Linux users in the cold, and
+this program was written to fill that need. It is developed and tested on
+Debian GNU/Linux but is expected to run on most flavors of Linux as well as
+any other platforms with the Perl bindings to the GTK+ libraries.
 
 
 =head1 LICENSING AND LEGAL CONSIDERATIONS (Please read)
 
-GLOC is not authorized by OverDrive or eMusic. However, GLOC does not make any
+GLOC is not authorized by OverDrive. However, GLOC does not make any
 attempts to circumvent license restrictions and only works with the (already
 DRM-free) MP3 versions of audiobooks. It requires the user to have a license
 for any books downloaded in the same way that the official,
@@ -1894,7 +1783,7 @@ non-Linux-compatible client does.
 It is important to note, however, that GLOC is not an audiobook manager, and
 does not manage license restrictions. It is a simple client which facilitates
 the download of legally borrowed or purchased MP3 files from the official
-OverDrive or eMusic servers to the user's computer. It can display license
+OverDrive servers to the user's computer. It can display license
 restrictions associated with a book (such as expiration date for borrowed
 books or burn-to-CD limits) but the user is responsible for abiding by any
 and all such restrictions and removing files when the license period has ended.
@@ -1971,23 +1860,21 @@ typical use case and some relevant implementation details are provided below.
 =head2 Loading a Book
 
 GLOC is meant to be used as a download manager. It works by reading
-information from the XML metadata files that are served by both OverDrive and
-eMusic (albeit in different formats) when a download is initiated. Basically,
-when you click "Download" for a book title in your browser, the browser
-will download an "*.odm" file (for OverDrive) or "*.emx" file (for eMusic). On
-Windows or Mac, this file is transparently opened by the OverDrive Media
-Console or eMusic Download Manager. For GLOC, the browser should be set up to
-recognize "*.odm" and "*.emx" file extensions and open them with the 'gloc'
-binary. The details of how to do this are browser-specific and the user should
-refer to their browser documentation for how to associate downloaded file
-types with specific applications.
+information from the XML metadata files that are served by OverDrive when a
+download is initiated. Basically, when you click "Download" for a book title
+in your browser, the browser will download an "*.odm" file. On Windows or Mac,
+this file is transparently opened by the OverDrive Media Console. For GLOC,
+the browser should be set up to recognize the "*.odm" file extension
+and open it with the 'gloc' binary. The details of how to do this are
+browser-specific and the user should refer to their browser documentation for
+how to associate downloaded file types with specific applications.
 
-Alternatively, the "*.odm" or "*.emx" XML files can be saved to disk and then
+Alternatively, the "*.odm" XML file can be saved to disk and then
 opened separately in GLOC. To do this, either pass the path to the XML file on
 the command line as the only argument to GLOC (e.g. 'gloc example_book.odm')
 or open up gloc and select the XML file via "File->Open".
 
-When an ODM or EMX file is opened for the first time, GLOC will prompt for a
+When an ODM file is opened for the first time, GLOC will prompt for a
 directory in which to save the audiobook files. Within this directory, it will
 create a new subdirectory with a name based on the book title. For example, if you are
 downloading "A Clockwork Orange" and select "Media/Audiobooks" as the parent
@@ -2017,11 +1904,10 @@ file is marked as 'Completed'.
 When a book download is attempted for the first time, GLOC saves a
 configuration file in the book's directory named '.gloc_meta' (normally hidden
 in Linux). It also renames and saves a copy of the downloaded XML file as
-'download.odm' or 'download.emx'. If GLOC needs to be closed for some reason
-during download, these files store information needed to resume the download
-at a later time. Simply run GLOC and open the 'download.odm' or 'download.emx'
-file. All relevant information should load and the download can be resumed as
-per the previous paragraph.
+'download.odm.' If GLOC needs to be closed for some reason during download,
+these files store information needed to resume the download at a later time.
+Simply run GLOC and open the 'download.odm' file. All relevant information
+should load and the download can be resumed as per the previous paragraph.
 
 
 =head1 COMMAND LINE OPTIONS
@@ -2057,9 +1943,6 @@ audiobooks which require proprietary licensing libraries not available on
 Linux. However, many libraries as well as commercial retailers using OverDrive
 have a wide selection of MP3 audiobooks for download. 
 
-GLOC should be working with eMusic now as well, but the developer no longer
-has an active account and so testing has been limited.
-
 GLOC is considered to be in beta testing stage. The developer has used it
 extensively for his own needs and it behaves stably on his system, but no
 outside testing on other system configurations has been done. Users are
@@ -2078,7 +1961,7 @@ Hubert Chathi <@uhoreg> (port to Gtk3)
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2014-2021 Jeremy Volkening
+Copyright 2014-2023 Jeremy Volkening
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
