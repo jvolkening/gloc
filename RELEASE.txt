@@ -1,5 +1,10 @@
 GLOC
 
+Version 1.002
+
+* Fix handling of multiple ampersands in metadata
+* Improved handling of not-well-formed input XML
+
 Version 1.001
 
 * Fix handling of potentially missing metadata
