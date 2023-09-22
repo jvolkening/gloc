@@ -15,6 +15,10 @@ this program was written to fill that need. It is developed and tested on
 Debian GNU/Linux but is expected to run on most flavors of Linux as well as
 any other platforms with the Perl bindings to the GTK+ libraries.
 
+For a period of time, GLOC worked with the eMusic/eStories service as well;
+however, eMusic/eStories changed their system to direct download of MP3s and
+this functionality was removed in GLOC v2.000.
+
 # LICENSING AND LEGAL CONSIDERATIONS (Please read)
 
 GLOC is not authorized by OverDrive. However, GLOC does not make any
