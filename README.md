@@ -1,6 +1,6 @@
 # NAME
 
-gloc - A GNU/Linux Overdrive/EMusic download client
+gloc - A GNU/Linux Overdrive download client
 
 # SYNOPSIS
 
@@ -8,17 +8,16 @@ gloc - A GNU/Linux Overdrive/EMusic download client
 
 # DESCRIPTION
 
-GLOC is a download manager for the OverDrive and eMusic MP3 audiobook
-collections written in Perl+GTK. Lack of a native Linux client for downloading
-OverDrive audiobooks from libraries and retailers has left Linux users in the
-cold, and this program was written to fill that need.  eMusic compatibility
-was added later. It is developed and tested on Debian GNU/Linux but is
-expected to run on most flavors of Linux as well as any other platforms with
-the Perl bindings to the GTK+ libraries.
+GLOC is a download manager for the OverDrive MP3 audiobook collection written
+in Perl+GTK. Lack of a native Linux client for downloading OverDrive
+audiobooks from libraries and retailers has left Linux users in the cold, and
+this program was written to fill that need. It is developed and tested on
+Debian GNU/Linux but is expected to run on most flavors of Linux as well as
+any other platforms with the Perl bindings to the GTK+ libraries.
 
 # LICENSING AND LEGAL CONSIDERATIONS (Please read)
 
-GLOC is not authorized by OverDrive or eMusic. However, GLOC does not make any
+GLOC is not authorized by OverDrive. However, GLOC does not make any
 attempts to circumvent license restrictions and only works with the (already
 DRM-free) MP3 versions of audiobooks. It requires the user to have a license
 for any books downloaded in the same way that the official,
@@ -27,7 +26,7 @@ non-Linux-compatible client does.
 It is important to note, however, that GLOC is not an audiobook manager, and
 does not manage license restrictions. It is a simple client which facilitates
 the download of legally borrowed or purchased MP3 files from the official
-OverDrive or eMusic servers to the user's computer. It can display license
+OverDrive servers to the user's computer. It can display license
 restrictions associated with a book (such as expiration date for borrowed
 books or burn-to-CD limits) but the user is responsible for abiding by any
 and all such restrictions and removing files when the license period has ended.
@@ -81,7 +80,7 @@ or (as a last resort) submit a question to the developers.
 # ALTERNATIVE INSTALLATION
 
 If you have Docker and `docker-compose` installed then you can get GLOC up and
-running quickly with [gloc_box](https://github.com/justin2004/gloc_box).
+running quickly with [gloc\_box](https://github.com/justin2004/gloc_box).
 Please make note of the potential issues with Docker and root mentioned in the
 associated README.
 
@@ -93,23 +92,21 @@ typical use case and some relevant implementation details are provided below.
 ## Loading a Book
 
 GLOC is meant to be used as a download manager. It works by reading
-information from the XML metadata files that are served by both OverDrive and
-eMusic (albeit in different formats) when a download is initiated. Basically,
-when you click "Download" for a book title in your browser, the browser
-will download an "\*.odm" file (for OverDrive) or "\*.emx" file (for eMusic). On
-Windows or Mac, this file is transparently opened by the OverDrive Media
-Console or eMusic Download Manager. For GLOC, the browser should be set up to
-recognize "\*.odm" and "\*.emx" file extensions and open them with the 'gloc'
-binary. The details of how to do this are browser-specific and the user should
-refer to their browser documentation for how to associate downloaded file
-types with specific applications.
+information from the XML metadata files that are served by OverDrive when a
+download is initiated. Basically, when you click "Download" for a book title
+in your browser, the browser will download an "\*.odm" file. On Windows or Mac,
+this file is transparently opened by the OverDrive Media Console. For GLOC,
+the browser should be set up to recognize the "\*.odm" file extension
+and open it with the 'gloc' binary. The details of how to do this are
+browser-specific and the user should refer to their browser documentation for
+how to associate downloaded file types with specific applications.
 
-Alternatively, the "\*.odm" or "\*.emx" XML files can be saved to disk and then
+Alternatively, the "\*.odm" XML file can be saved to disk and then
 opened separately in GLOC. To do this, either pass the path to the XML file on
 the command line as the only argument to GLOC (e.g. 'gloc example\_book.odm')
 or open up gloc and select the XML file via "File->Open".
 
-When an ODM or EMX file is opened for the first time, GLOC will prompt for a
+When an ODM file is opened for the first time, GLOC will prompt for a
 directory in which to save the audiobook files. Within this directory, it will
 create a new subdirectory with a name based on the book title. For example, if you are
 downloading "A Clockwork Orange" and select "Media/Audiobooks" as the parent
@@ -139,11 +136,10 @@ file is marked as 'Completed'.
 When a book download is attempted for the first time, GLOC saves a
 configuration file in the book's directory named '.gloc\_meta' (normally hidden
 in Linux). It also renames and saves a copy of the downloaded XML file as
-'download.odm' or 'download.emx'. If GLOC needs to be closed for some reason
-during download, these files store information needed to resume the download
-at a later time. Simply run GLOC and open the 'download.odm' or 'download.emx'
-file. All relevant information should load and the download can be resumed as
-per the previous paragraph.
+'download.odm.' If GLOC needs to be closed for some reason during download,
+these files store information needed to resume the download at a later time.
+Simply run GLOC and open the 'download.odm' file. All relevant information
+should load and the download can be resumed as per the previous paragraph.
 
 # COMMAND LINE OPTIONS
 
@@ -173,9 +169,6 @@ audiobooks which require proprietary licensing libraries not available on
 Linux. However, many libraries as well as commercial retailers using OverDrive
 have a wide selection of MP3 audiobooks for download. 
 
-GLOC should be working with eMusic now as well, but the developer no longer
-has an active account and so testing has been limited.
-
 GLOC is considered to be in beta testing stage. The developer has used it
 extensively for his own needs and it behaves stably on his system, but no
 outside testing on other system configurations has been done. Users are
@@ -193,7 +186,7 @@ Hubert Chathi <@uhoreg> (port to Gtk3)
 
 # COPYRIGHT AND LICENSE
 
-Copyright 2014-2021 Jeremy Volkening
+Copyright 2014-2023 Jeremy Volkening
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
