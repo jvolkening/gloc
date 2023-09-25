@@ -374,6 +374,7 @@ package main;
 
 use strict;
 use warnings;
+use 5.012;
 
 our $VERSION = '2.000';
 
@@ -386,6 +387,7 @@ use File::Copy qw/copy/;
 use Getopt::Long;
 use List::Util qw/min/;
 use MIME::Base64 qw/decode_base64/;
+use Pod::Usage;
 use threads;
 use threads::shared;
 use Thread::Queue;
@@ -430,7 +432,9 @@ GetOptions(
     'retry=i'   => \$retries,
     'debug'     => \$debug,
     'threads=i' => \$n_threads,
-);
+    'help'      => sub{ pod2usage(-verbose => 2, -exitval => 0); },
+    'version'   => sub{ say 'This is ',$PROG_NAME,' v', $VERSION; exit },
+) or pod2usage( -verbose => 1);
 
 
 ## Build queue system (MUST be done before using Gtk3!!)
@@ -1920,22 +1924,30 @@ The following options are supported when using GLOC from the command line:
 
 =over 1
 
-=item --retry <int>
+=item B<--retry> <int>
 
-Specify the number of times times to retry connections before giving up.
-Default: 3.
+Specify the number of times times to retry connections before giving up
+(Default: 3)
 
-=item --threads <int>
+=item B<--threads> <int>
 
-Specify the number of download threads to use.
+Specify the number of download threads to use
 
 *WARNING*: use of more than one thread is experimental and currently
 unstable. Stick to the default singled-threaded mode unless you want to
-assist with testing and debugging this feature. Default: 1.
+assist with testing and debugging this feature. (Default: 1)
 
-=item --debug
+=item B<--debug>
 
-Print various debugging messages to STDERR. Useful for developers only.
+Print various debugging messages to STDERR; useful for developers only
+
+=item B<--help>
+
+Print usage description and exit
+
+=item B<--version>
+
+Print software version and exit
 
 =back
 
