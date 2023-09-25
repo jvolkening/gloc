@@ -1,5 +1,9 @@
 GLOC
 
+Version 2.000
+
+* Remove all eMusic-related code from codebase
+
 Version 1.002
 
 * Fix handling of multiple ampersands in metadata
