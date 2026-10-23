@@ -1,3 +1,5 @@
+**Update October 2026**: It has been some time now since OverDrive finished their transition to Libby and fully disabled their previous download infrastructure; this software therefore no longer functions with the OverDrive service and is being archived. There are no plans to support Libby or future replacements. RIP OMC.
+
 # NAME
 
 gloc - A GNU/Linux Overdrive download client
